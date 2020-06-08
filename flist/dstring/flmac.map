@@ -1,0 +1,43 @@
+Stack Allocation = 20480 bytes
+
+ Start  Stop   Length Name                   Class
+ 00000H 02513H 02514H _TEXT                  CODE
+ 02520H 02521H 00002H EMULATOR_TEXT          CODE
+ 02522H 02522H 00000H C_ETEXT                ENDCODE
+ 02530H 02530H 00000H EMULATOR_DATA          FAR_DATA
+ 02530H 02571H 00042H NULL                   BEGDATA
+ 02572H 029DDH 0046CH _DATA                  DATA
+ 029DEH 029DFH 00002H XIQC                   DATA
+ 029E0H 029EDH 0000EH DBDATA                 DATA
+ 029EEH 029FBH 0000EH CDATA                  DATA
+ 029FCH 029FCH 00000H XIFB                   DATA
+ 029FCH 029FCH 00000H XIF                    DATA
+ 029FCH 029FCH 00000H XIFE                   DATA
+ 029FCH 029FCH 00000H XIB                    DATA
+ 029FCH 029FCH 00000H XI                     DATA
+ 029FCH 029FCH 00000H XIE                    DATA
+ 029FCH 029FCH 00000H XPB                    DATA
+ 029FCH 029FDH 00002H XP                     DATA
+ 029FEH 029FEH 00000H XPE                    DATA
+ 029FEH 029FEH 00000H XCB                    DATA
+ 029FEH 029FEH 00000H XC                     DATA
+ 029FEH 029FEH 00000H XCE                    DATA
+ 029FEH 029FEH 00000H XCFB                   DATA
+ 029FEH 029FEH 00000H XCF                    DATA
+ 029FEH 029FEH 00000H XCFE                   DATA
+ 029FEH 029FEH 00000H CONST                  CONST
+ 029FEH 02A05H 00008H HDR                    MSG
+ 02A06H 02ADBH 000D6H MSG                    MSG
+ 02ADCH 02ADDH 00002H PAD                    MSG
+ 02ADEH 02ADEH 00001H EPAD                   MSG
+ 02AE0H 032E7H 00808H _BSS                   BSS
+ 032E8H 032E8H 00000H XOB                    BSS
+ 032E8H 032E8H 00000H XO                     BSS
+ 032E8H 032E8H 00000H XOE                    BSS
+ 032F0H 03605H 00316H c_common               BSS
+ 03610H 0860FH 05000H STACK                  STACK
+
+ Origin   Group
+ 0253:0   DGROUP
+
+Program entry point at 0000:0848

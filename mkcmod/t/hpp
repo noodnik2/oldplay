@@ -1,0 +1,40 @@
+//	Revision:      		1
+
+/*
+
+	_@l_.h			qad-NewARC21 C++ Header: "_@n_" class
+				Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+#ifndef	_@u__H_INC
+#define	_@u__H_INC
+
+/*
+	sub-#includes (if any)
+*/
+#include	"obj.h"
+
+/*
+	Class declarations
+*/
+
+class _@n_ : public M_Obj
+{
+
+	OCLSDEFS() ;
+
+	public:
+		_@n_() ;
+		~_@n_() ;
+
+	protected:
+
+	private:
+
+} ;
+
+/* #ifndef _@u__H_INC */
+#endif
+
+// end of _@l_.h

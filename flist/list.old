@@ -1,0 +1,299 @@
+/*	Revision:	2
+*/
+/*
+
+	list			file list management
+				Copyright (C) 1990-1992, by Marty Ross
+
+
+	sloppy; uses malloc(3) now.  should use own memory allocator
+	with garbage collection since makes use of small fragments.
+
+		struct fl_line *makelist(dn, &n, &s);	expand dir
+		char *dn;
+		int n ;
+
+		struct fl_line *getlist(rc, rv, &n, &s);	get list
+		int rc;
+		char *rv;
+
+		struct fl_line *fl_lofs(index);		get item in list
+		int index ;
+
+		void fl_scmd(flp, value);		set cmd for file
+
+		char *fl_gcmd(flp);			get cmd for file
+
+*/
+
+#include	<stdio.h>
+#include	<fcntl.h>
+
+#include	"compiler.h"
+#include	"flist.h"
+#include	"dirlist.h"
+
+extern struct fl_arg fla ;
+extern struct fl_opt flo ;
+
+struct fl_line *i_xpandir();
+
+static void xpand(), toomany(), notadir() ;
+
+extern char *malloc() ;
+
+struct fl_line *makelist(dn, np, tsp)
+char *dn;
+int *np;
+long *tsp;
+{
+	struct fl_line *flp ;
+
+	flp= i_xpandir(dn, np, tsp);
+	return(flp);
+}
+
+struct fl_line *i_xpandir(dn, np, tsp)
+char *dn;
+int *np;
+long *tsp;
+{
+	int i, b, n, pp;
+	struct fl_line *flist, *elist, *rlist, *lp;
+	DIRLIST_T *dl_p ;
+	DIRENTRY_T *de_p ;
+	char fname[FL_FNSIZE+1] ;
+	unsigned char *p ;
+	long totsize ;
+
+	if (dirlist_init(dn, &dl_p)) {
+		notadir(dn) ;
+		exit(1);
+	}
+
+	n= 0;
+	elist= flist= (struct fl_line *)NULL;
+	totsize= 0L ;
+
+	pp= (strcmp(dn, ".") != 0) ;
+
+	for (i= 1; dirlist_read(dl_p, &de_p) == 0; i++) {
+
+		if (!flo.o_all) {
+		/*
+			UNIX:	omit all files beginning with '.'
+			MSDOS:	omit files: "." and ".."
+		*/
+			if (de_p->d_name[0] == '.') continue;
+		}
+
+		if (de_p->d_name[0] == PATHSEP_CH) { /* absolute: leave alone */
+			strcpy(fname, de_p->d_name) ;
+		}
+		else {
+			if (pp) {			/* if not dir==. */
+				strcpy(fname, dn) ;
+				strcat(fname, PATHSEP_CHA) ;
+				strcat(fname, de_p->d_name) ;
+			}
+			else {
+				strcpy(fname, de_p->d_name) ;
+			}
+		}
+
+		b= sizeof(struct fl_line) ;
+		b+= (((strlen(fname)+1)+3) & ~3) ;
+
+		if ((p= (unsigned char *)malloc(b)) == NULL) {
+			toomany(n) ;
+			dirlist_fini(dl_p) ;
+			exit(1) ;
+		}
+
+		memcpy(	p + sizeof(struct fl_line),
+			fname,
+			b - sizeof(struct fl_line)
+		);
+
+		lp= (struct fl_line *) p;
+
+		lp->line= (char *)(p + sizeof(struct fl_line));
+		lp->next= (struct fl_line *) NULL;
+		lp->cmd=  (struct fl_cmd *) NULL;
+		if (fl_diag(lp)) {
+			free((char *)lp) ;
+			continue ;
+		}
+
+		if (flist == (struct fl_line *)NULL) flist= lp ;
+		else (elist->next)= lp;
+
+		elist= lp ;
+		n++ ;
+
+		if (!(elist->stat.isdir)) {
+			totsize+= (elist->stat.size) ;
+			continue ;
+		}
+		xpand(&elist, &n, &totsize) ;
+	}
+
+	dirlist_fini(dl_p) ;
+
+	(*tsp)= totsize ;
+	(*np)= n ;
+
+	return(flist);
+}
+
+struct fl_line *getlist(rc, rv, np, tsp)
+int rc, *np;
+char *rv[];
+long *tsp ;
+{
+	int i, b, n;
+	struct fl_line *flist, *elist, *lp ;
+	long totsize ;
+
+	n= 0;
+	totsize= 0L ;
+	flist= elist= (struct fl_line *)NULL;
+	for (i= 0; i< rc; i++) {
+		b= sizeof(struct fl_line) ;
+		if ((lp= (struct fl_line *)malloc(b)) == NULL) {
+			toomany(n) ;
+			exit(1);
+		}
+
+		if (flist == (struct fl_line *)NULL) {
+			flist= elist= lp;
+		}
+		else {
+			(elist->next)= lp;
+			elist= lp ;
+		}
+
+		(elist->line)= rv[i] ;
+		(elist->next)= (struct fl_line *) NULL;
+		(elist->cmd)=  (struct fl_cmd *) NULL;
+		n++ ;
+
+		fl_diag(elist) ;
+
+		if (!(elist->stat.isdir)) {
+			totsize+= (elist->stat.size) ;
+			continue ;
+		}
+		
+		xpand(&elist, &n, &totsize) ;
+	}
+	
+	(*tsp)= totsize ;
+	(*np)= n ;
+
+	return(flist);
+}
+
+int fl_diag(flp)
+struct fl_line *flp;
+{
+	int rc ;
+
+	if (rc= statfile(flp->line, &flp->stat)) {
+		flp->stat.size= 0L ;
+		flp->stat.date= 0L ;
+		flp->stat.isdir= 0 ;
+	}
+	return(rc) ;
+}
+
+struct fl_line *fl_lofs(topline)
+int topline;
+{
+	register struct fl_line *flp ;
+	register int i;
+
+	flp= FL_LIST ;
+	for (i= 0; (flp != (struct fl_line *)NULL) && (i< topline); i++) {
+		flp= (flp->next) ;
+	}
+	return(flp) ;
+}
+
+void fl_scmd(flp, buf)
+struct fl_line *flp ;
+char *buf;
+{
+	struct fl_cmd *fcp ;
+
+	if (flp != NULL) {
+		if ((fcp= (flp->cmd)) != NULL) {
+			free((char *)fcp);
+			flp->cmd= NULL ;
+		}
+		while((buf[0] == ' ') || (buf[0] == '\t')) buf++;
+		if (buf[0] != '\0') {
+			fcp= (struct fl_cmd *)malloc(sizeof(struct fl_cmd)) ;
+			if (fcp == NULL) {
+				flserr(19, "can't get memory for command", 2);
+				return;
+			}
+			fcp->rc= (-9999) ;
+			strcpy(fcp->cmdline, buf);
+			flp->cmd= fcp ;
+		}
+	}
+}
+
+char *fl_gcmd(flp)
+struct fl_line *flp ;
+{
+	if (flp != NULL) {
+		if ((flp->cmd) != NULL) {
+			return((flp->cmd)->cmdline);
+		}
+	}
+	return((char *)NULL);
+}
+
+static void xpand(listpp, nnp, tsp)
+struct fl_line **listpp;
+int *nnp ;
+long *tsp ;
+{
+	struct fl_line *elist, *rlist ;
+	long ns ;
+	int nn ;
+
+	if (flo.o_recur) {
+		elist= (*listpp) ;
+		rlist= i_xpandir(elist->line, &nn, &ns);
+		if (rlist != NULL) {
+			(elist->next)= rlist ;
+			while((rlist->next) != NULL) {
+				rlist= (rlist->next) ;
+			}
+			(*listpp)= rlist ;
+			(*tsp)+= ns ;
+			(*nnp)+= nn ;
+		}
+	}
+}
+
+static void toomany(n)
+int n ;
+{
+	char emsg[123] ;
+
+	sprintf(emsg, "too many files: %d", n) ;
+	clerror(emsg) ;
+}			
+
+static void notadir(dn)
+char *dn ;
+{
+	char emsg[FL_FNSIZE+25] ;
+
+	sprintf(emsg, "not a directory: %s", dn);
+	clerror(emsg) ;
+}

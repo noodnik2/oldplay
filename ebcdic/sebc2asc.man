@@ -1,0 +1,33 @@
+	SEBC2ASC(3)		C LIBRARY FUNCTIONS		SEBC2ASC(3)
+
+
+	NAME
+		sebc2asc - standard EBCDIC/ASCII translation
+
+
+	SYNOPSYS
+		int sebc2asc(e);
+		int isebctext(e);
+
+		int e;
+
+	DESCRIPTION
+		Use sebc2asc when you have a small amount of standard
+		EBCDIC text data to convert into ASCII.  The module
+		containing these two routines is small but relatively
+		slow.  The translation table is built-in to the module,
+		therefore cannot be changed, and no initialization call
+		is required.
+
+		sebc2asc returns the ASCII equivalent of the passed
+		EBCDIC text value.  If the character is not EBCDIC text,
+		it is returned unaltered.
+
+		isebctext returns true if the EBCDIC character passed
+		to it is an EBCDIC text character (contained in the
+		translation table).  false is returned otherwise.
+
+
+	SEE ALSO
+		ebcdic(3)
+

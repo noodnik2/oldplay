@@ -1,0 +1,15 @@
+
+;	This is the checkout file, containing the status of each
+;	currently checked out device.
+;
+;	The file format is the same as that of the resource file
+;	so far as header lines and the ID line are concerned, ex-
+;	cept that the ID value is "status", not "resource".
+;
+;	The data lines consist of three values: the first two of
+;	which are words separated by white space.  The third value
+;	is a time-stamp which may contain spaces.
+;
+
+	id	status	   100
+resource5 mdr Thu May  2 17:45:18 1991

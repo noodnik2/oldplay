@@ -1,0 +1,79 @@
+
+#	rdioc:  read cpio -c data set to specified file or diskette
+#
+#	Copyright (c) 1989 by C.R.C. 
+#
+
+ADRIVE=/dev/rdsk/f0q15dt
+BDRIVE=/dev/rdsk/f1q18dt
+
+case $# in
+2)	;;
+*)	cat 1>&2 <<\!
+rdioc:  Usage:  rdioc <src> dirname
+        The special <src> "a:" is understood to mean the A: drive, "b:" is
+	understood to be the B: drive, and otherwise <src> is assumed to be
+        an existing, readable file.
+
+	dirname is the directory to which ./files are to be restored.
+
+rdioc:  no action taken
+!
+	exit 1
+	;;
+esac
+
+case "$1" in
+a:|A:)	SRC=$ADRIVE
+	;;
+b:|B:)	SRC=$BDRIVE
+	;;
+*)	if [ -b $1 ]
+	then
+		echo "rdioc:  cannot cpio(1) from a block special file" 1>&2
+		echo "rdioc:  no action taken" 1>&2
+		exit 4
+	fi
+	if [ -c $1 ]
+	then
+		SRC=`mkabsolute $1`
+	elif [ -f $1 ]
+	then
+		if [ -r $1 ]
+		then
+			SRC=`mkabsolute $1`
+		else
+			echo "rdioc:  cannot access $1" 1>&2
+			exit 1
+		fi
+	else
+		echo "rdioc:  $1 is not a valid source" 1>&2
+		echo "        the file may not exist or may exist as a directory" 2>&1
+		exit 1
+	fi
+	;;
+esac
+
+if [ ! -d $2 ] 
+then
+	echo "rdioc:  $2 is not a directory" 1>&2
+	exit 1
+fi
+
+if [ ! -w $2 ] 
+then
+	echo "rdioc:  directory $2 is not writable" 1>&2
+	exit 1
+fi
+
+if cd $2
+then
+	if cpio -idvmBc < $SRC
+	then
+		exit 0
+	fi
+	echo "rdioc:  cpio(1) failed"
+	exit 9
+fi
+echo "rdioc:  cannot change to $2" 1>&2
+exit 1

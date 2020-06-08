@@ -1,0 +1,17 @@
+        
+        * tg
+        |
+        +-----------------------+
+        |                       * proccmd
+        * getline  -----+       
+        |               * pfkey
+        |               * doesc
+        |               * dobs
+        |
+        +---------------+
+        |               * draw
+        * dataseg       * queue
+                        * sco   --------+
+                        * getkey        * spc
+                                        * screen
+                                        * scroll

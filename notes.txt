@@ -1,0 +1,10 @@
+
+
+$=POS root
+
+$/qdx		(qdex data files)
+$/drv		(qdxd, rsmd, qutils, rutils)
+$/data
+$/data/images
+$/data/fonts	(graphics only)
+$/seq

@@ -1,0 +1,40 @@
+#define	Revision		1
+
+/*
+
+	_@l_.cpp		qad-NewARC21 C++ Source: "_@n_" class
+				Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+/*
+	#includes
+*/
+#include	"compiler.h"
+#include	"usrtypes.h"
+#include	"_@l_.h"
+
+/*
+	Class global declaration
+*/
+DEFCLASS(_@n_, M_Obj) ;
+// DEFABSTRACTCLASS(_@n_, M_Obj) ;
+// DEFTOPCLASS(_@n_) ;
+
+/*
+	Class methods
+*/
+
+_@n_::~_@n_()
+{
+}
+
+_@n_::_@n_()
+{
+}
+
+/*
+	internal functions (if any)
+*/
+
+// end of _@l_.cpp

@@ -1,0 +1,44 @@
+	EBCDIC(1)		USER COMMANDS			EBCDIC(1)	
+
+
+	NAME
+		ebcdic - filter to convert EBCDIC to ASCII
+
+
+	SYNOPSIS
+
+		ebcdic [-options] ebc_file.in asc_file.out
+
+		(ebc_process) | ebcdic [-options] | (asc_process)
+
+	OPTIONS
+		-h		print syntax diagram, help message
+		-q		quiet.  suppress informatory messages
+		-z		enable diagnostic messages
+		-E e_table	selects alternate translation table
+
+
+	DESCRIPTION
+		ebcdic is a filter which changes all EBCDIC text characters
+		in the input stream to their ASCII equivalent.  The mapping
+		of EBCDIC to ASCII is controlled by the ebcdic(3) function,
+		which reads a translation table (see ebcdic(5)).  Any
+		characters not located in the EBCDIC table are left unchanged.
+		An error message is printed if the input file contains any
+		non-EBCDIC text characters unless the -q option was used.
+
+		The first syntax listed is similar to that of the UNIX `cp'
+		command: it copies the first file to the second.  The
+		alternate syntax shows how ebcdic can be used as a filter.
+
+	DIAGNOSTICS
+		ebcdic returns a zero status only if it translated
+		all of the characters from the input file.
+
+	SEE ALSO
+		ebcdic(3), ebcdic(5)
+
+	FILES
+		/usr/local/bin/ebcdic		Executable
+		/usr/local/bin/ebcdic.T		Default translation table
+

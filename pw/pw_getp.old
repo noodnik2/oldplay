@@ -1,0 +1,152 @@
+#include	<stdio.h>
+#include	<sys/types.h>
+#include	<unistd.h>
+
+#include	"compiler.h"
+#include	"pw.h"
+#include	"pw_proc.h"
+#include	"pw_scan.h"
+
+#define		TFN_SIZE	128
+
+extern struct opts o ;
+
+static pwscan_t *procscan_open() ;
+static void loadstr() ;
+
+void pw_getp(pl_p)
+pwlist_t *pl_p ;
+{
+	pwscan_t *psh_p ;
+
+	pl_p->n= 0 ;
+	if ((psh_p= procscan_open()) == (pwscan_t *)NULL) {
+		clerror("can't find process(es)") ;
+		exit(1) ;
+	}
+
+	while((pl_p->n)< MAXPROCS) {
+		if (procscan_read(psh_p, &pl_p->pp_a[pl_p->n])) break ;
+		(pl_p->n)++ ;
+	}
+
+	if ((pl_p->n) == 0) {
+		clerror("no process(es)") ;
+		exit(1) ;
+	}
+
+	if ((pl_p->n)>= MAXPROCS) {
+		clerror("too many procs") ;
+		exit(1) ;
+	}
+}
+
+/*
+	internal routines
+*/
+
+static int pw_getp_reject(pp_p)
+pwproc_t *pp_p ;
+{
+	if (o.reject_user != (char *)NULL) {
+		if (strcmp(pp_p->user, o.reject_user) == 0) return(1) ;
+	}
+	return(0) ;
+}
+
+/*
+	internal routines, system-dependent
+*/
+
+#define		PSLINE_SIZE	132
+static char ps_tempfn[TFN_SIZE+1] ;
+static pwscan_t *procscan_open()
+{
+	char pscmd[20+TFN_SIZE+1] ;
+	char psline[PSLINE_SIZE+1] ;
+	FILE *fp ;
+	static pwscan_t psh ;
+
+	sprintf(ps_tempfn, "/tmp/pw%ld", (long)getpid()) ;
+	sprintf(pscmd, "ps -ef > %s", ps_tempfn) ;
+	system(pscmd) ;
+	if ((fp= fopen(ps_tempfn, "r")) == (FILE *)NULL) {
+		return((pwscan_t *)NULL) ;
+	}
+	/* strip the header line */
+	if (fgets(psline, PSLINE_SIZE, fp) == (char *)NULL) {
+		fclose(fp) ;
+		unlink(ps_tempfn) ;
+		return((pwscan_t *)NULL) ;
+	}
+	psh.fp= fp ;
+	return(&psh) ;
+}
+
+static int procscan_read(psh_p, pp_p)
+pwscan_t *psh_p ;
+pwproc_t *pp_p ;
+{
+	int rc ;
+
+	while(/*CONSTCOND*/1) {
+		if (rc= procscan_read_0(psh_p, pp_p)) return(rc) ;
+		if (!pw_getp_reject(pp_p)) break ;
+	}
+
+	return(0) ;
+}
+
+static int procscan_read_0(psh_p, pp_p)
+pwscan_t *psh_p ;
+pwproc_t *pp_p ;
+{
+	char psline[PSLINE_SIZE+1] ;
+	long pid, mm, ss ;
+	int pslen ;
+
+	if (fgets(psline, PSLINE_SIZE, psh_p->fp) == (char *)NULL) {
+		fclose(psh_p->fp) ;
+		unlink(ps_tempfn) ;
+		return(1) ;
+	}
+	pslen= strlen(psline) - 1 ;
+	psline[pslen]= '\0' ;
+
+	memset((char *)pp_p, '\0', sizeof(pwproc_t)) ;
+
+	if (pslen> 0) {
+		loadstr(pp_p->user, psline, PWPL_USER) ;
+	}
+	if (pslen> 47) {
+		loadstr(pp_p->name, psline+47, PWPL_NAME) ;
+	}
+	if (pslen> 9) {
+		if (sscanf(psline+9, "%5ld", &pid) == 1) {
+			pp_p->pid= pid ;
+		}
+	}
+	if (pslen> 39) {
+		if (sscanf(psline+39, "%ld:%ld", &mm, &ss) == 2) {
+			pp_p->secs= (mm * 60L) + ss ;
+		}
+	}
+	return(0) ;
+}
+
+static void loadstr(to, from, maxlen)
+char *to, *from ;
+int maxlen ;
+{
+	int i, j ;
+
+	maxlen-- ;
+	for (i= 0; i< maxlen; i++) {
+		if (from[i] != ' ') break ;
+	}
+	for (j= 0; i< maxlen; i++, j++) {
+		if (from[i] == ' ') break ;
+		to[j]= from[i] ;
+	}
+	to[j]= '\0' ;
+}

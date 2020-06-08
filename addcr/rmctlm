@@ -1,0 +1,17 @@
+
+case $1 in
+	"")	echo "${0}: specify name of file containing ^M" 1>&2
+		exit 1
+		;;
+esac
+
+tfi=`mktempfi A`
+if sed "1,$ s///g" < $1 > $tfi; then
+	mv $1 /tmp
+	mv $tfi $1
+	exit 0
+fi
+
+rm $tfi
+echo "${0}: error $? from sed" 1>&2
+

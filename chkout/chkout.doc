@@ -1,0 +1,82 @@
+CHKOUT(C1)		USER ENHANCEMENT COMMANDS		CHKOUT(C1)
+
+
+NAME
+
+	chkout - check out a device or file
+
+
+SYNOPSIS
+
+	chkout -c [-u <user>] [-g <group>] [-m <mode>] <dev> [<dev> ...]
+	chkout -r <dev> [<dev> ...]
+	chkout -l [{ all | avail | busy | inuse }]
+	chkout -q <dev> [<dev>...]
+	chkout
+
+
+USAGE
+
+	Use the chkout command to make a system device or resource-file
+	available for exlusive use by a user or group of users.
+
+	The -c option checks out a resource file to a user or group; the
+	owner of the device or file is changed to <user>, the group is
+	changed to <group>, and the permissions are changed to <mode>.
+	When the <user> and <group> values are not specified, the current
+	values are taken from the user issuing the chkout command.  The
+	<mode> value defaults to read, write, and execute permission for
+	the designated user, the temporary owner of the resource (700).
+
+	The -r option returns the resource to its default owner and group,
+	with the default access permissions.
+
+	The -l option reports the current status of all resources.
+
+	The -q option reports the checked-out status of specified resources.
+
+	Without any arguments, the chkout command prints a short usage
+	diagram.
+
+	A list of resource-files available for checking out is contained
+	in the file ${LCLBIN}/chkout.res.  The format of this file is:
+
+	  <dev> <owner> <group> <default mode> <access group(s)>
+
+	One entry per line, each field separated by white space.
+
+	<dev>, <owner>, and <group> must be specified explicitly, while
+	<default mode> may be specified in any valid chmod(1) format.
+	If the field <access group(s)> is present, it lists the groups
+	to which users must belong in order to be allowed to chkout the
+	specified resource.  The file /etc/groups is scanned to determine
+	access rights according to <access group(s)>.  Each group-id
+	specified in <access group(s)> is separated by a comma.
+
+	The list of currently checked-out resources is kept in the file
+	${LCLBIN}/chkout.status whose format is:
+
+	  <dev> <by_user> <time_out>
+
+	The <by_user> value is the user that issued the chkout command
+	resulting in the checkout of the resource, and the <time_out>
+	field indicates the time and date that the resource was checked
+	out.  This enables the -q command to publish who forgot to re-
+	turn a checked-out resource, and how guilty that person is.  To
+	whom the resource is checked out, etc, can be revealed by using
+	the "ls -l" command on the resource file itself.
+
+
+NOTES
+
+	Note that the angle brackets are used only for diagrammatic pur-
+	poses, and are not entered as part of each field.
+
+
+FILES
+
+	${LCLBIN}/chkout				executable command
+	${LCLBIN}/chkout.res				registered resources
+	${LCLBIN}/chkout.status				resource status
+
+

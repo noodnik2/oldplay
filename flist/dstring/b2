@@ -1,0 +1,1 @@
+cc -otestrd testrd.c rddstr.c bswap.c

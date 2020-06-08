@@ -1,0 +1,171 @@
+#define	MSRC_Revision		1
+#define	MSRC_Version		0
+
+/*
+
+	_@l_.c			 	_@u_ C Source: Main Module
+					Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+/*
+	#includes
+*/
+
+#include	"compiler.h"
+
+#include	<stdio.h>
+#include	<stdlib.h>
+
+#include	"clgetopt.h"
+#include	"_@l_.h"
+
+
+/*
+	local #defines
+*/
+
+#define	_@u_VER_MINOR(x)	((x) % 100)
+#define	_@u_VER_MAJOR(x)	((x) / 100)
+#define	_@u_MAX_EMSGSIZE	255
+
+
+/*
+	local typedefs
+*/
+
+
+/*
+	internal data
+*/
+
+
+/*
+	public data
+*/
+
+struct _@l__parms parms ;
+
+
+/*
+	internal function decls
+*/
+
+static void init(int argc, char *argv[]) ;
+static void signon() ;
+static void syntax() ;
+static void badargs(char *pszMessage, char *pszArg) ;
+
+
+/*
+	entry points
+*/
+
+void main(int argc, char *argv[])
+{
+	init(argc, argv) ;
+	printf("_@l_: Hello, world\n") ;
+	exit(_@u_E_SUCCESS) ;
+	/*NOTREACHED*/
+}
+
+
+/*
+	internal functions
+*/
+
+static void init(int argc, char *argv[])
+{
+	int iOpt ;
+
+	memset(&parms, '\0', sizeof(struct _@l__parms)) ;
+
+	clinit(argv) ;
+	while((iOpt= clgetopt(argc, argv, "hqz"))> 0) {
+
+		switch(iOpt) {
+
+			case 'h':
+				parms.bHelp= _@u_BOOL_TRUE ;
+				break ;
+
+			case 'q':
+				parms.bQuiet= _@u_BOOL_TRUE ;
+				break ;
+
+			case 'z':
+				parms.iDebugLevel++ ;
+				break ;
+
+			default:
+				badargs((char *) NULL, (char *) NULL) ;
+				/*NOTREACHED*/
+		}
+	}
+
+	if (!parms.bQuiet) {
+		signon() ;
+	}
+
+	if (cloptind< argc) {
+		badargs("too many argument(s)", argv[cloptind]) ;
+		/*NOTREACHED*/
+	}
+
+	if (parms.bHelp) {
+		syntax() ;
+		exit(_@u_E_HELP) ;
+		/*NOTREACHED*/
+	}
+
+}
+
+static void signon()
+{
+	printf(
+		"_@l_ v%d.%d.%d\n",
+		MSRC_Version,
+		_@u_VER_MAJOR(MSRC_Revision),
+		_@u_VER_MINOR(MSRC_Revision)
+	) ;
+	printf("Copyright (C) 1996, Point Of Sale Ltd.\n") ;
+	printf("\n") ;
+}
+
+static void syntax()
+{
+	static char *pText[]= {
+		"syntax:",
+		"\t_@l_ [options]",
+		"",
+		"options:",
+		"\t-h\tprints this help text",
+		"\t-q\toperates quietly",
+		"\t-z\tincrease general debug level"
+	} ;
+#define	NTEXT	(sizeof(pText) / sizeof(pText[0]))
+	int i ;
+
+	for (i= 0; i< NTEXT; i++) {
+		printf("%s\n", pText[i]) ;
+	}
+}
+
+static void badargs(char *pszMessage, char *pszArg)
+{
+	char szEMessage[_@u_MAX_EMSGSIZE+1] ;
+
+	if (pszMessage) {
+		strcpy(szEMessage, pszMessage) ;
+		if (pszArg) {
+			strcat(szEMessage, ": ") ;
+			strcat(szEMessage, pszArg) ;
+		}
+		clerror(szEMessage) ;
+	}
+	clerror("(use 'h' option for help)\n") ;
+	exit(_@u_E_BADARGS) ;
+	/*NOTREACHED*/
+}
+
+/* end of _@l_.c */

@@ -1,0 +1,190 @@
+#! /bin/sh
+#
+#	midiscr query expr sortexpr rtype stype
+#
+
+diflag="no"
+progname="`basename $0`"
+webroot="http://www.pos.co.il/~marty"
+fileroot="/home/marty/website"
+
+errfile="/tmp/${progname}e.$$"
+listfile="/tmp/${progname}l.$$"
+
+query="$1"
+expr="$2"
+sortexpr="$3"
+rtype="$4"
+stype="$5"
+xtype="kw"
+
+display()
+{
+	if [ "$diflag" = "no" ]; then
+		diflag="yes"
+		echo "Content-type: text/html"
+		echo ""
+		echo "<html>"
+		echo "<head>"
+		echo "   <title>Marty's MIDI Catalog - Search Results</title>"
+		echo "   <base href=\"$webroot/midiscr\">"
+		echo "</head>"
+	fi
+	echo "$*"
+}
+
+display_end()
+{
+	echo "</body>"
+	echo "</html>"
+}
+
+disperr()
+{
+	printpagehdr "greenguy.gif"
+	display "<h1><i><blink>Oh no!</blink></i></h1>"
+	display "<br clear=all>"
+	display "<hr>"
+	display "<br clear=all>"
+	display "<center>"
+	display "<h2>${progname} error: $*</h2>"
+	display "<br clear=all>"
+	display "<table border=8><tr><td>"
+	display "<pre>`cat < $errfile`</pre><br>"
+	display "</td></tr></table>"
+	display "</center>"
+	printpageftr
+}
+
+dispnotfound()
+{
+	openpage
+	display "<br clear=all><hr>"
+	display "<dl>"
+	display "<h2>No entries were found</h2>"
+	display "<font size=4>"
+	display "<dd>"
+	display "Make sure you're using only the listed keywords."
+	display "Take a look at some of the examples if you need"
+	display "help in forming search expressions."
+	display "</font>"
+	display "</dl>"
+	closepage
+}
+
+createlist()
+{
+	case "$stype" in
+		r)	sopt="-O" ;;
+		*)	sopt="-o" ;;
+	esac
+	case "$sortexpr" in
+		"")	sexp="_n" ;;
+		*)	sexp="$sortexpr" ;;
+	esac
+	if mklist -z -q $sopt "$sexp" -s "$1" "$expr" 2> $errfile 1> $listfile; then
+		set - `wc $listfile`
+		nentries="$1"
+		export nentries
+		if [ "$nentries" = "0" ]; then
+			dispnotfound
+			cleanupandleave
+			# notreached
+		fi
+	else
+		disperr "R($?); expression=\"$expr\""
+		cleanupandleave
+		# notreached
+	fi
+}
+
+cleanupandleave()
+{
+	rm -f $listfile $errfile
+	exit $*
+	# notreached
+}
+
+printpagehdr()
+{
+	display "`cat $fileroot/head.hti`"
+	display "<img src=\"images/${1:-martyw.gif}\" alt=\"\" align=right>"
+}
+
+printpageftr()
+{
+	display "<br clear=all><hr>"
+	display "`cat $fileroot/tail.hti`"
+	display_end
+}
+
+openpage()
+{
+	printpagehdr
+	display "<dl>"
+	display "<h1>MIDI Search Results</h1>"
+	display "<dd>"
+	display "<dl>"
+	display "<h2><i>$expr</i></h2>"
+	display "<dd>"
+	display "<h3>(${nentries} entries)</h3>"
+	display "</dl>"
+	display "</dl>"
+}
+
+printpage()
+{
+	display "<br clear=all><hr>"
+	display "<center><a href=\""
+	display "$webroot$SCRIPT_NAME?$query&rtype=z\""
+	display ">Take as ZIPfile</a></center>"
+	display "<br clear=all><hr>"
+	display "<center><table border=2>"
+	display "<tr>"
+	display "<th>entry</th><th>filesize</th><th>name</th>"
+	case "$xtype" in
+		"kw")	display "<th>keywords</th>"	;;
+	esac
+	display "</tr>"
+	cat $listfile
+	display "</table></center>"
+}
+
+closepage()
+{
+	printpageftr
+}
+
+case "$#" in
+5)	;;
+6)	xtype="$6" ;;
+*)	disperr "Improper call to MIDI Catalog search engine"
+	cleanupandleave
+	# notreached
+	;;
+esac
+
+case "$rtype" in
+z)	createlist "%@%"
+	if mhlzip < $listfile 2> $errfile; then
+	:
+	else
+		disperr "R($?); from mhlzip"
+	fi
+	;;
+*)	sstr="<td><a href=\"$webroot/music/midi/songs/%@%\">%@%</a></td>"
+	sstr="${sstr}<td>%filesize%</td><td>%name%</td>"
+	case "$xtype" in
+		"kw")	sstr="${sstr}<td>%*%</td>" ;;
+	esac
+	createlist "<tr>${sstr}</tr>"
+	openpage
+	printpage
+	closepage
+	;;
+esac
+
+cleanupandleave
+# notreached
+
+# end of mhlscr

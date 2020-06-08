@@ -1,0 +1,27 @@
+(1)	Make "presort" expression.  To implement this, "db.c"
+	will need to be changed so that random access is possible
+	on the database.
+
+	instead of calling "dbRead()", the following will happen:
+
+	(a)	first pass (creates list, fills in "presort" and "_N"):
+			dbOpen(&db, "mklist.db") ;
+			while(dbReadRow(&db, &dbr)) {
+				processFirstPassEntry(&dbr) ;
+			}
+			dbClose(&db) ;
+
+	(b)	sort list created by "processFirstPassEntry" by value
+		resulting from evaluation of "presort" expression
+
+	(c)	second pass:
+			dbOpen(&db, "mklist.db") ;
+			for (i= 0; i< nList; i++) {
+				dbSeekRow(&db, pList[i].dbRowPos) ;
+				dbReadRow(&db, &dbr) ;
+				processSecondPassEntry(&dbr) ;
+			}
+			dbClose(&db) ;
+
+	(d)	resort list by "postsort"
+

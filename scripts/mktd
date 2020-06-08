@@ -1,0 +1,53 @@
+
+case "$1" in
+	"")	FILE=$HOME/sun/mdr-apr1.tar ;;
+	*)	FILE=$1 ;;
+esac
+
+msg  "FILE=$FILE"
+
+mklist()
+{
+	msg "Creating directory list"
+	tar -tfv $FILE | br | sort -u
+}
+
+rdlist()
+{
+	msg "Reading/processing list"
+	while read line; do
+		set - $line
+		nargs=$#
+		eval "lastarg=$"$nargs
+		procitem "$1" "$2" "$lastarg"
+	done
+}
+
+procitem()
+{
+	item=$1 what=$2 arg=$3
+	case "$what" in
+
+		symbolic)
+			msg "$item ignored: symbolic link to: $arg"
+			;;
+
+		linked)
+			if ln $item $arg; then
+				echo "$item linked to $arg"
+			fi
+			;;
+
+		*)	if mkdir $item; then
+				msg "$item created"
+			fi
+	esac
+}
+
+msg()
+{
+	echo "$0: $*" 1>&2
+}
+
+
+mklist | rdlist

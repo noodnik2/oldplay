@@ -1,0 +1,61 @@
+
+	TO:	Reader
+	DATE:	Jan 27, 1990
+	FROM:	Marty
+	RE:	flist source directory
+
+	The files in this directory comprise the flist program.
+	
+	To compile the modules here, use the makefile provided.
+
+	To reinstall everything from scratch, type the following
+	(assuming you are currently in this directory):
+	
+		$ setenv DESTDIR /usr/local/bin
+		$ make clean
+		$ make install
+
+	Note that the DESTDIR you are setting is where everything
+	will be "installed".  Set this to "." if you want to test
+	the code before making it public. 
+
+	Or, you can "make" and install an individual component.  The
+	components are:
+
+		flist			The flist program
+		flistmc			The configuration utility
+		flmac.prog		The configuration compiler
+		flist.man1		The flist manual
+
+	To make (compile and link) flist, for example, type:
+
+		$ make flist
+
+	To install (copy to $DESTDIR and make public) a component
+	such as flist.man1 for example, type:
+
+		$ make install_flist.man1
+
+	Just add the string "install_" before the component name to
+	install it.
+
+	The command "make install" simply installs all components
+	of flist.
+		
+
+
+	the dstring directory:
+	----------------------
+
+	the code in this directory is the original code brought
+	in from another source (Stata/RGS) to support disk buf-
+	fering of messages.  These subroutines are being used
+	for storing the keyboard macros available in flist.
+
+	The mkdstr.c source program contains the main routine
+	for flmac.prog, the macro file compiler. e.g.
+
+		cc -o flmac.prog mkdstr.c ...
+
+	Again, this stuff is taken care of in the makefile.
+

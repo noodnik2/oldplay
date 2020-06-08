@@ -1,0 +1,67 @@
+/*
+
+	compiler.h:		qad-Arc21 Standard C source #include file
+				Copyright (C) 1991, Contahal Ltd.
+
+	(any compiler-specific macros or definitions go here)
+
+	C Compiler #include file for ALL source modules.
+	(to be included AFTER all standard system #include files)
+	
+	Macros:
+		COMPILER	specific compiler identification
+		OPSYS		"generic name" of operating system
+		OPSLVL		"minumum level" of operating system
+
+	(user must set all three to configure new instance of compiler.h)
+	(change following comment AND definition at end of file)
+
+	This instance:		AT&T Unix Standard C Compiler & Libraries
+
+		OPSYS		OPUNIX
+		OPSLVL		OPLUXV
+		COMPILER	CCUXV
+
+*/
+
+/*
+	"generic" operating systems supported:
+*/
+#define		OPUNIX		1		/* UNIX */
+#define		OPMSDOS		2		/* MS/PC-DOS  */
+
+/*
+	OPSYS==OPUNIX Operating system levels:
+*/
+#define		OPLUXV		101		/* AT&T UnixV */
+#define		OPLBSD42	102		/* Berkeley 4.2 */
+#define		OPLXENIX	103		/* Xenix */
+
+/*
+	OPSYS==MSDOS Operating system levels:
+*/
+#define		OPLDOS21	201		/* MS-DOS 2.1 */
+#define		OPLDOS31	202		/* MS-DOS 3.1 */
+#define		OPLDOS41	203		/* MS-DOS 4.1 */
+#define		OPLDOS51	204		/* MS-DOS 5.1 */
+
+/*
+	specific compilers supported:
+*/
+#define		CCUXV		1		/* standard Unix V compiler */
+#define		CCMS500		2		/* microsoft C 5.00	    */
+#define		CCMS600		3		/* microsoft C 6.00	    */
+#define		CCBSD		4		/* standard BSD4.x compiler */
+#define		CCXENIX		5		/* standard Xenix compiler  */
+
+/*
+	Definitions in use for this product:
+*/
+#define		OPSYS		OPUNIX
+#define		OPSLVL		OPLUXV
+#define		COMPILER	CCUXV
+
+#ifndef	NULL
+#define	NULL	0
+#endif
+

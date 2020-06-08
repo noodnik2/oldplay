@@ -1,0 +1,64 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+
+# Create a scrollbar on the right side of the main window and a listbox
+# on the left side.
+
+proc exit {} {
+#	puts stdout [format "Exited"]
+	destroy .
+}
+
+proc ok {} {
+#	puts stdout [format "Ok"]
+	exit
+}
+
+proc quit {} {
+#	puts stdout [format "Quit"]
+	exit
+}
+
+proc doit {} {
+#	puts stdout [format "Doit"]
+	set child [exec mpl &]
+	if {$child == 0} {
+		puts stdout [format "in child: exiting"]
+		exit
+	} else {
+		puts stdout [format "in parent: child is %s" $child]
+	}	
+}
+
+frame .song
+frame .song.list
+scrollbar .song.list.scroll -command ".song.list.list yview"
+listbox .song.list.list -yscroll ".song.list.scroll set" -relief sunken	\
+	-width 20 -height 20 -setgrid yes
+
+pack .song.list.list .song.list.scroll -side left -fill both -expand yes
+pack .song.list -side left
+
+frame .general
+button .general.ok	-command "ok"	-text "Ok"
+button .general.quit	-command "quit"	-text "Quit"
+button .general.doit	-command "doit" -text "Do it"
+
+pack .general.ok .general.quit .general.doit -side top -fill both
+
+pack .song .general -side left -fill both
+
+wm minsize . 1 1
+
+# Fill the listbox with a list of all the files in the directory (run
+# the "ls" command to get that information).
+
+foreach i [exec sh -c "ls -a /d/keepmidi/*.mid"] {
+    .song.list.list insert end $i
+}
+
+# Set up bindings for the browser.
+
+bind all <Control-c> {exit}
+bind .song.list.list <Double-Button-1> {foreach i [selection get] {exec play $i}}

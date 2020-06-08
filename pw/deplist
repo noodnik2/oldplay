@@ -1,0 +1,26 @@
+clgetopt.o:	compiler.h clgetopt.h 
+
+pw.o:	compiler.h clgetopt.h pw.h 
+
+pw_cmpp.o:	compiler.h pw.h pw_proc.h 
+
+pw_doit.o:	compiler.h pw.h pw_proc.h pw_inter.h 
+
+pw_entry.o:	compiler.h pw.h pw_proc.h 
+
+pw_getp.o:	compiler.h pw.h pw_proc.h pw_scan.h 
+
+pw_gp_0.o:	compiler.h pw.h pw_proc.h pw_scan.h 
+
+pw_gp_1.o:	compiler.h pw.h pw_proc.h pw_scan.h compiler.h clgetopt.h pd.h 
+
+pw_inter.o:	compiler.h pw.h pw_inter.h 
+
+pw_pct.o:	compiler.h pw.h pw_proc.h pw_pct.h 
+
+pw_tio.o:	compiler.h 
+
+rtrim.o:	compiler.h 
+
+t.o:	
+

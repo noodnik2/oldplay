@@ -1,0 +1,60 @@
+
+
+
+
+	(1) chkout -c [-u <user>] [-g <group> [-m <mode>] <dev> [<dev> ...]
+	(2) chkout -r <dev> [<dev> ...]
+	(3) chkout -q [<dev> ...]
+	(4) chkout
+
+
+(1)	Checkout.  All or nothing.
+
+	Verify <user>, <group>, <mode>.
+	Verify <dev>s don't exist in the checked-out resource list.
+	Verify <dev>s exist in registered resource list.
+	(verify that current values match default values)
+	(trap interrupts to restore routine)
+	Change devices, if error do restore routine, exit.
+	Update checked-out resource list.
+	exit rc
+
+	restore: restore original values for all devices.
+	exit 1
+	
+
+(2)	Return.  All or nothing.
+
+	Verify <dev>s exist in checked-out resource list.
+	(gather current values for each device)
+	(trap interrupts to restore routine)
+	Change devices to defaults, if error do restore routine, exit.
+	Update checked-out resource list.
+	exit rc
+	
+	restore: restore original values for all devices.
+	exit 1
+	
+
+(3)	Query.
+	
+	If no <dev>s, do (q) for all devices in registered resource list,
+	else do (q) for each <dev>:
+
+	(q)	if <dev> NOT exists in registered resource list,
+			report "resource not registered"
+			return
+		end
+		if <dev> exists in checked-out resource list,
+			report who & when checked out
+		else if current values match default values,
+			report "resource available"
+		else
+			report current values for <dev>
+		end
+
+
+(4)	Usage.  Syntax diagram.
+
+
+

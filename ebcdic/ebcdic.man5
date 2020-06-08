@@ -1,0 +1,124 @@
+	EBCDIC(5)		FILE FORMATS			EBCDIC(5)
+
+
+	NAME
+		ebcdic.T - EBCDIC/ASCII translation table
+
+
+	SYNOPSIS
+		/usr/local/bin/ebcdic.T
+
+	DESCRIPTION
+		The ebcdic.T file is a text file containing two values
+		per each line.  The first is the decimal number of the
+		EBCDIC character value to be mapped to ASCII.  The sec-
+		ond value is separated from the first by a single blank
+		character and is either a single ASCII character, or
+		a multiple-digit decimal number representing an ASCII
+		value.  Both values must represent integers in the range
+		0 to 255, inclusive.
+
+	EXAMPLE
+		Following is the standard ebcdic.T file:
+		
+		193 A
+		194 B
+		195 C
+		196 D
+		197 E
+		198 F
+		199 G
+		200 H
+		201 I
+		209 J
+		210 K
+		211 L
+		212 M
+		213 N
+		214 O
+		215 P
+		216 Q
+		217 R
+		226 S
+		227 T
+		228 U
+		229 V
+		230 W
+		231 X
+		232 Y
+		233 Z
+		129 a
+		130 b
+		131 c
+		132 d
+		133 e
+		134 f
+		135 g
+		136 h
+		137 i
+		145 j
+		146 k
+		147 l
+		148 m
+		149 n
+		150 o
+		151 p
+		152 q
+		153 r
+		162 s
+		163 t
+		164 u
+		165 v
+		166 w
+		167 x
+		168 y
+		169 z
+		241 1
+		242 2
+		243 3
+		244 4
+		245 5
+		246 6
+		247 7
+		248 8
+		249 9
+		240 0
+		161 ~
+		79 |
+		124 @
+		123 #
+		91 $
+		108 %
+		95 ^
+		80 &
+		92 *
+		77 (
+		93 )
+		109 _
+		78 +
+		121 `
+		96 -
+		126 =
+		90 !
+		106 32
+		74 |
+		224 \
+		122 :
+		127 "
+		192 {
+		208 }
+		125 '
+		94 ;
+		97 /
+		75 .
+		107 ,
+		76 <
+		110 >
+		111 ?
+		64 32
+
+
+	ALSO SEE
+		ebcdic(3)
+
+

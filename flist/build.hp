@@ -1,0 +1,32 @@
+
+for x in $*
+do
+	cc -c $x
+done
+
+cc \
+clgetopt.o \
+cescstr.o \
+sparse.o \
+flist.o \
+doflist.o \
+getcmd.o \
+setscn.o \
+procscn.o \
+scn.o \
+list.o \
+statfile.o \
+sortby.o \
+rddstr.o \
+bswap.o \
+macro.o \
+syntax.o \
+docmd.o \
+scnq.o \
+-lcurses -oflist.hp
+
+dest=${DESTDIR}/flist
+
+mv flist.hp $dest
+chmod 775 $dest
+chgrp crc $dest

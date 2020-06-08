@@ -1,0 +1,24 @@
+#	Revision:	4
+#
+
+#
+#	makedefs.msw		qad-NewARC21 Centralized Build (Make) defs
+#				For MSWindows platform
+#				Copyright (C) 1995, Contahal Ltd.
+#
+
+INCOPTS=-I ..\include
+POSTDIR=..\dist
+
+TRACEOPTS=
+!IFDEF NOTRACE
+TRACEOPTS=/DNOOTRACE
+!ENDIF
+
+.SUFFIXES:	.cpp
+CPP=$(CPP) /AL /GA /W3 /Zd
+
+.cpp.obj:
+	$(CPP) -c $(INCOPTS) $(TRACEOPTS) $*.cpp
+
+# end of makedefs.msw

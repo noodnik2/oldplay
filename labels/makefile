@@ -1,0 +1,31 @@
+
+#
+#	Makefile for PC-DOS "nlbl" command
+#
+
+PRODUCT=nlbl.exe
+
+DESTDIR=E:\marty\bin
+
+NLBL_OBJ= nlbl.obj clgetopt.obj
+
+$(PRODUCT):	$(NLBL_OBJ)
+	$(CC) -o $(PRODUCT) $(NLBL_OBJ)
+
+install: $(PRODUCT)
+	copy $(PRODUCT) $(DESTDIR)
+
+clean:
+	FOR %%F IN (*.obj $(PRODUCT) *.bak) DO del %%F
+
+#
+#
+#
+
+compiler.h:	compiler.p5
+	copy compiler.p5 compiler.h
+
+nlbl.obj:	compiler.h clgetopt.h 
+
+clgetopt.obj:	compiler.h clgetopt.h 
+

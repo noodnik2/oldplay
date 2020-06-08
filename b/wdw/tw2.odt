@@ -1,0 +1,270 @@
+#include                "ucc.h"
+
+                                /* internal forward routines */
+void scpxfer(), rxfer() ;
+int tabout();
+
+                                /* external user routines    */
+void scphline(), scpvline(), scpplace() ;
+void scp0scrl(), scp0cput() ;
+void ucccpy(), uccsum(), uccsub() ;
+unsigned dataseg() ;
+void uswap() ;
+
+                                /* external library routines */
+void movedata();
+
+/*
+
+rc =  scpinit(montype);                                 *
+
+ul =  scpisize(size);                                   *
+      scpxfer(dir,buf,pos,size);                        *
+      scpscrl(n,pos,size,color);                        *
+      scpbord(weight,pos,size,color);                   *
+      scpcput(c,pos,size,color,cursor);                 *
+      scpsput(s,pos,size,color,cursor,wrap,in);         *
+
+      scpplace(c,uy,ux,color);                          *
+
+*/
+
+struct mtype {
+        unsigned dmaseg;
+        unsigned char sochar;
+        unsigned char nrows;
+        unsigned char ncols;
+        unsigned char junk;
+        } ;
+
+static struct mtype mt[] = {
+                { 0xb000, 2, 25, 80 },  /* Monochrome */
+                { 0xb800, 2, 25, 80 }   /* CGA        */
+        }; 
+
+static struct mtype *scpcmtp = mt ;
+static struct uccoord scpcrs;
+static unsigned dsseg;
+
+#define         NMONS           (sizeof(mt)/sizeof(mt[0]))
+
+int scpinit(montype)
+int montype;
+{
+if (montype<0 || montype>=NMONS) return(-1);
+scpcmtp= mt+montype;
+dsseg= dataseg();
+return(0);
+}
+
+/*
+        use this routine to find out how large of a buffer
+        is required to save an image of a specified size.
+*/
+unsigned scpisize(size)
+struct uccoord *size;
+{
+register unsigned result ;
+result =  (unsigned)(size->y);
+result *= (unsigned)(size->x);
+result *= (unsigned)(scpcmtp->sochar);
+return(result);
+}
+
+/*
+        This routine scrolls the window specified using the background color.
+*/
+void scpscrl(nl,pos,size,color)
+int nl;
+struct uccoord *pos, *size, *color;
+{
+scp0scrl( nl, pos, size, color->y);
+}                               
+
+/*
+        This routine places the character specified at the current cursor
+        location.  Also, it guards against out-of-window cursor movement.
+        Cursor control characters \n, and \r are supported.
+
+        The cursor structure is updated to the position of the NEXT
+        character to be written.
+*/
+void scpcput(c, pos, size, color, cursor)
+int c;
+struct uccoord *pos, *size, *color, *cursor;
+{
+struct uccoord up;
+unsigned char ui;           
+
+uccsum(&up, pos, cursor); 
+
+if (cursor->x >= size->x) { 
+   up.x= pos->x; up.y++; cursor->y++;
+   }
+
+if (cursor->y >= size->y) { 
+   ui= (unsigned char)1 + cursor->y - size->y ;
+   scp0scrl((int)ui, pos, size, color->y); 
+   up.y -= ui;
+   }
+
+if (c>=' ') scpplace((unsigned char)c, up.y, up.x++, color->x);
+else { 
+   if (c=='\n') { ++up.y; up.x= pos->x; } 
+   else if (c=='\r') { up.x= pos->x; }
+   }
+
+cursor->y = up.y - pos->y; cursor->x = up.x - pos->x;
+}                               
+
+
+/*
+        This routine places the string specified at the current cursor
+        location.  The string must fit completely within the window or
+        it will be truncated on the right.  The string delimiters are 
+        \n and \0.  The return value is the length of the string (the 
+        offset of the delimiter character).  If the wrap parameter is 1,
+        then the end of the string is defined by the string delimiter
+        or the rightmost column of the window, whichever is first.
+
+        The cursor structure is updated to the position of the NEXT
+        character to be written (since wrap not supported here, this
+        may be off of the right of the window; scpcput() will handle
+        this so that calls to it may be interspersed).
+
+        Cursor control character \n is supported here,
+        although it does not cause a 'line-feed' as scpcput() does.
+        
+*/
+int scpsput(s, pos, size, color, cursor, wrap, in)
+char *s, wrap;
+struct uccoord *pos, *size, *color, *cursor;
+int in;
+{
+register int i, j;
+int k;
+unsigned char c;
+struct uccoord up;
+                                /* uccsum(&up, pos, cursor); */ 
+up.y= pos->y + cursor->y; up.x= pos->x + cursor->x;
+i= 0; j= in + (int)(size->x) - (int)(cursor->x);
+for (k=0; (c=*s) && c!='\n'; k++, s++) {
+    if (i>=j) { if (wrap) break; }
+    else {
+       if (c>=' ') { 
+          if (i++>=in) {
+             scpplace(c, up.y, up.x++, color->x);
+             }
+          }     
+       }
+    }
+cursor->x = (up.x - pos->x);
+return(k);
+}                               
+
+/*
+        static unsigned char scplbar[3][2] = {
+                {' ',' '}, {'-','|'}, {'=','!'}
+        };      
+        static unsigned char scpcrnr[3][4] = {
+                {' ',' ',' ',' '}, {',','.','\'','`' }, {'/','\\','/','\\'}
+        };
+*/
+
+static unsigned char scplbar[3][2] = {
+                {32,32}, {196,179}, {205,186}
+        };                               
+static unsigned char scpcrnr[3][4] = {
+                {32,32,32,32}, {218,191,217,192}, {201,187,188,200}
+        };
+                                            
+/*                                          
+
+        draws a border around the window of the specified weight:
+
+        weight 0 indicates a blank border is to be drawn,
+        weight 1 indicates a single line border,
+        weight 2 indicates a double line border.
+
+        weights which are negative or greater than 2 are not drawn
+
+*/
+void scpbord(lines, pos, size, color)
+int lines;
+struct uccoord *pos, *size, *color;
+{
+struct uccoord p0, p1, p2, p3;
+
+if (lines<0 || lines>2) return;
+
+ucccpy(&p0,pos); uccsum(&p2,&p0,size); p2.y--; p2.x--;
+ucccpy(&p1,&p2); p1.y=p0.y; ucccpy(&p3,&p2); p3.x=p0.x;
+
+scphline(scplbar[lines][0], p0.y, p0.x+1, p1.x-1, color->x);
+scpplace(scpcrnr[lines][1], p1.y, p1.x, color->x);
+scpvline(scplbar[lines][1], p1.y+1, p2.y-1, p1.x, color->x);
+scpplace(scpcrnr[lines][2], p2.y, p2.x, color->x);
+scphline(scplbar[lines][0], p2.y, p2.x-1, p3.x+1, color->x);
+scpplace(scpcrnr[lines][3], p3.y, p3.x, color->x);
+scpvline(scplbar[lines][1], p3.y-1, p1.y+1, p3.x, color->x);
+scpplace(scpcrnr[lines][0], p0.y, p0.x, color->x);
+}
+
+/*
+        This routine transfers the contents of a window from the screen
+        to memory, or from memory to the screen.  The caller must supply
+        the buffer (of size at least scpisize(size)).
+*/
+void scpxfer(func, addr, pos, size)
+int func;
+unsigned char *addr;
+struct uccoord *pos, *size;
+{
+int x0, y0, lx, ly;
+int i, j, o, od, nc, nr, oa, soc ;
+
+y0 = (int)pos->y;               x0 = (int)pos->x;
+ly = (int)size->y;              lx = (int)size->x;
+nr = (int)scpcmtp->nrows;       nc = (int)scpcmtp->ncols;
+
+soc= (int)scpcmtp->sochar; 
+od= (soc*nc); oa= (soc*lx); 
+o=  (od*y0) + (soc*x0);          /* o is physical screen offset of (0,0) */
+for (i=0; i<ly; i++) {
+    rxfer(func, addr, o, lx);
+    addr+=oa; o+=od;
+    }
+}
+
+void scpplace(c, uy, ux, co)
+unsigned char c, uy, ux, co;
+{
+register unsigned soc ; 
+unsigned vseg, voff ;
+unsigned char b[2];
+
+b[0]=c; b[1]=co;
+soc= (unsigned)scpcmtp->sochar ;
+vseg= scpcmtp->dmaseg ;
+voff= (unsigned)scpcmtp->ncols;
+voff*= soc * (unsigned)uy;
+voff+= soc * (unsigned)ux;
+movedata(dsseg, b, vseg, voff, sizeof(b));
+}
+
+/*
+        begin static subroutines
+*/      
+static void rxfer(func, addr, o, lx)
+int func;
+unsigned char *addr; 
+int o, lx;
+{
+unsigned sseg, soff, dseg, doff, nbytes;
+
+sseg= dsseg; soff=(unsigned)addr;
+dseg= scpcmtp->dmaseg;  doff=(unsigned)o;
+nbytes= ( (unsigned)lx * (unsigned)scpcmtp->sochar );
+if (func) { uswap(&sseg,&dseg); uswap(&soff,&doff); }
+movedata(sseg, soff, dseg, doff, nbytes);
+}

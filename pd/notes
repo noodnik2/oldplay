@@ -1,0 +1,202 @@
+
+
+Description:
+
+the "protocol driver" is a separate process (Unix)
+that sits on top of the qad-Arc21 run-time module,
+and handles all screen formatting functions.  This
+handles environments where the user is not using a
+terminal with its own PD driver.
+
+on the PC, the code is compiled into the "terminal
+emulation" software, thus making it a "PD driver".
+Therefore, no PD driver need be loaded on top of
+the Unix run-time module.
+
+		      +------+	
+		      |	User |
+		      +------+	
+			 /\/
+			 |||
+			 /\/
+		      +------+	
+		      |	 PD  |
+		      +------+	
+			 /\/
+			 |||
+			 /\/
+		      +------+	
+		      |	RTM  |
+		      +------+	
+
+Objectives:
+
+The objectives of the PD are two:
+
+	1.	"Vertical" separation of the screen interface
+		from the run-time system, allowing a new screen
+		interface (PD driver) to be created and installed
+		without changing the run-time system in any way.
+
+	2.	"Horizontal" serparation of the screen interface,
+		allowing the PD driver to be installed anywhere
+		along the path between the user and the run-time
+		system, as is convenient.  For efficiency, the PD
+		should be installed as close to the user screen as
+		is possible, allowing off-loading of screen proc-
+		essing onto the users workstation's CPU.
+
+The PD's datasets:
+
+		user keyboard		UKB
+		user screen		USC	(PD's stdout)
+		RTM stdout		RTO	(PD's stdin)
+		RTM stdin		RTI
+
+The PD multiplexes these datasets in the following way:
+
+	UKB is processed for control signals and user input
+	When appropriate, action is taken and data is sent
+	to RTM (from user input or for system control).
+
+	RTO is processed and corresponding sequences are sent
+	to USC (screen formatting), or RTI (user input, after
+	obtaining from UKB).
+
+	RTI is written to whenever PD needs to talk to the RTM
+	or issue RTM control signals.
+
+	USC is written to by PD (only) with appropriate control
+	strings for formatting the screen.
+
+
+PD modes:
+
+	The PD has two modes of operation:
+
+		1.	passthru
+		2.	command
+
+	In "passthru" mode, the PD simply passes data through
+	from UKB to RTI, and RTO to USC, unmodified, except
+	for watching for the "ECM" (enter command mode) seq-
+	uence, upon receipt of which it switches itself into
+	the command mode.
+
+	In "command" mode, the PD has sub-modes of operation:
+
+		A.	ascii
+		B.	binary
+		C.	error
+
+	This refers to the type of data understood by the PD
+	in command mode (coming from RTO).  The PD starts in
+	ASCII mode when loaded.  In ASCII mode, data that
+	contains binary values is expanded into a form that
+	occupies ASCII values 0x40 through 0x7F, and is as-
+	sumed to be transmittable across any medium.  In
+	BINARY mode, the full 8-bits are used for all data.
+
+	In addition, when a transmission error occurs, the
+	PD presumably detects the error and enters ERROR mode,
+	in which all data is ignored until an ECM is received,
+	at which time the previous command mode is restored.
+
+	In command mode, the PD understands a number of com-
+	mands:	
+
+		1.	initialize screen		(IS)
+		2.	de-initialize screen		(FS)
+		3.	perform QADTTY command		(QT)
+		4.	start debug mode		(BD)
+		5.	stop debug mode			(ED)
+		6.	verify version number		(VV)
+		7.	set operational parameter(s)	(SP)
+		8.	leave command mode		(EC)
+	
+	Note that if the PD receives an ECM while in command
+	mode, the command mode is restarted; the current com-
+	mand is aborted.
+
+
+PD commands:
+
+	PD commands are ASCII strings, indicated in parentheses
+	in the above listing of commands.  Each command may have
+	its own set of arguments.
+
+(notes):
+
+	But what about synchronization of the RTM with the PD?
+
+	The question is: does the RTM wait for a return code
+	from each PD command before sending the next command?
+
+	If yes, it allows us to resend commands that weren't
+	received properly by the PD (resend last PD command),
+	but, it slows down the communication path considerably.
+	But, how will the RTM know that the PD is in sequence?
+	
+	Let's say YES: the RTM waits for a result from each PD
+	command.  The RTM interface follows:
+
+		pd_write(format_string, arg, arg ...) ;
+		pd_read(format_string, &arg, &arg ...) ;
+
+	The 'pd_write' call formats the PD command, complete
+	with starting ECM character, stores it in the 'last
+	command sent' buffer, and sends it.  The 'pd_read'
+	call re-transmits the 'last command sent' buffer if
+	it receives a special 're-transmit' control code
+	instead of a full return response.
+
+
+Architecture:
+
+	There are two main modules, one for each mode:
+
+	passthru mode:
+
+	After initializing itself, the PD waits for input using
+	the select(2) call:
+
+		select(input_source) ;
+		switch(input_source) {
+
+			case RTO:
+				read data from RTO
+				if ECM,
+					set flags for command mode,
+					return
+				write received data to USC
+				return
+
+			case UKB:
+				read data from UKB
+				write received data to RTI
+				return
+		}
+
+	command mode:
+
+		select(input_source) ;
+		switch(input_source) {
+
+			case RTO:
+				read data from RTO
+				if ECM,
+					return
+				interpret received data as command,
+				ignore it (log an error) if bad,
+				or perform it, setting flags, and/or
+				writing to USC
+				return
+
+			case UKB:
+				read data from UKB
+				handle special signals
+				if waiting for user input, write
+				data to RTI
+				return
+		}
+

@@ -1,0 +1,7 @@
+#! /bin/sh
+
+user=$1; shift
+
+echo $* | /usr/local/samba/bin/smbclient -M $user 2>&1 | grep "status was 0-0" > /dev/null
+exit $?
+

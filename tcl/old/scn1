@@ -1,0 +1,135 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+
+# Create a scrollbar on the right side of the main window and a listbox
+# on the left side.
+
+proc myexitproc {} {
+	destroy .
+}
+
+proc mycloseproc {} {
+	global mycolor myhscale myvscale
+#	puts stdout [format "Color = %s" $mycolor]
+#	puts stdout [format "hscale = %s" $myhscale]
+#	puts stdout [format "vscale = %s" $myvscale]
+	myexitproc
+}
+
+proc myscanproc {} {
+	global mycolor myhscale myvscale myhtone myprev mybrt mycont
+	set myargs "$mycolor -f 0 0 $myhscale $myvscale"
+	set prevopt ""
+	if {$myprev != 0} {
+		set prevopt "-p"
+	}
+	set htoneopt ""
+	if {$myhtone != 0} {
+		set htoneopt "-a"
+	}
+	exec sh -c "mtekscan $htoneopt $prevopt $mycolor -f 0 0 $myhscale $myvscale -d $mybrt -k $mycont | xv -"
+}
+
+proc mysetupproc {} {
+	global mycolor myhtone mybrt myvscale myhscale mycont
+    	set mycolor	"-c"
+    	set myhtone	""
+    	set mybrt	10
+    	set mycont	0
+    	set myvscale	11
+    	set myhscale	8
+}
+
+proc myhscaleproc {hs} {
+	global myhscale
+	set myhscale $hs
+}
+
+proc myvscaleproc {vs} {
+	global myvscale
+	set myvscale $vs
+}
+
+proc mybrtproc {bs} {
+	global mybrt
+	set mybrt $bs
+}
+
+proc mycontproc {cs} {
+	global mycont
+	set mycont $cs
+}
+
+proc mypopulateproc {} {
+	global mycolor myhtone mybrt myvscale myhscale mycont
+
+	#frame .right -borderwidth 10 -bd 2 -relief sunken
+	frame .right
+
+	frame .right.btn
+	button .right.btn.close -command "mycloseproc" -text "Close"
+	button .right.btn.scan -command "myscanproc" -text "Scan"
+	pack .right.btn.close .right.btn.scan -side top
+
+	frame .right.c -borderwidth 10 -bd 2 -relief sunken
+	frame .right.c.rb -borderwidth 10 -bd 2 -relief raised
+	radiobutton .right.c.rb.color -text "Color" -variable mycolor -value "-c"
+	radiobutton .right.c.rb.bw -text "B/W" -variable mycolor -value "-g"
+	pack .right.c.rb.color .right.c.rb.bw -side top
+
+	frame .right.c.kb -borderwidth 10 -bd 2 -relief raised
+	checkbutton .right.c.kb.prev -text "Preview" -variable myprev
+	checkbutton .right.c.kb.htone -text "Halftone" -variable myhtone
+	pack .right.c.kb.prev .right.c.kb.htone -side top
+
+	pack .right.c.rb .right.c.kb -side top -fill x
+
+	#pack .right.btn .right.c -side top -fill x
+	pack .right.btn -side top -fill x
+	pack .right.c -side bottom -fill x
+
+	frame .left -borderwidth 10 -bd 2 -relief sunken
+
+	frame .left.hscale -borderwidth 10
+	scale .left.hscale.scale -orient vertical -length 100 -from 0 -to 8 \
+		-command "myhscaleproc" -label "X"
+	pack .left.hscale.scale -side top -fill y
+	.left.hscale.scale set $myhscale
+
+	frame .left.vscale -borderwidth 10
+	scale .left.vscale.scale -orient vertical -length 100 -from 0 -to 11 \
+		-command "myvscaleproc" -label "Y"
+	pack .left.vscale.scale -side top -fill y
+	.left.vscale.scale set $myvscale
+
+	frame .left.cont -borderwidth 10
+	scale .left.cont.scale -orient vertical -length 100 -from -42 -to 49 \
+		-command "mycontproc" -label "Contrast"
+	pack .left.cont.scale -side top -fill y
+	.left.cont.scale set $mycont
+
+	frame .left.brt -borderwidth 10
+	scale .left.brt.scale -orient vertical -length 100 -from 0 -to 100 \
+		-command "mybrtproc" -label "Brt"
+	pack .left.brt.scale -side top -fill y
+	.left.brt.scale set $mybrt
+
+	pack .left.hscale .left.vscale .left.brt .left.cont -side left
+
+	pack .left .right -side left -fill y
+}
+
+
+# Set up bindings for the browser.
+
+bind all <Control-c> {myexitproc}
+
+wm title . "ImageStar I Scanner Interface"
+wm minsize . 1 1
+
+mysetupproc
+mypopulateproc
+
+# do it
+# end

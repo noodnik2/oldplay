@@ -1,0 +1,14 @@
+20 March 1996
+
+Make diagnostic commands available to "authorized" users.
+
+One such command is return list of users currently using mtalk.
+
+"mtcheck" and "mtnotify" will first connect to this new service
+of mtalk to see if a "recipient" is already connected.  If mtalk
+refuses the connection, immediate exit of 1 (not present), if a
+recipient is found, immediate exit of 0 (present), else continue
+with normal ("as-is") processing.
+
+
+

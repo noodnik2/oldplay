@@ -1,0 +1,8 @@
+
+
+
+This is a file that contains lines that are very long.  How long are the lines in this file, you ask?  Well, to be sure, one might want to write a 'C' program that
+counted the exact length of each line by inializing a variable to zero each time it sees a newline character, or
+at the very beginning of execution.
+
+

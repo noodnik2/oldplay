@@ -1,0 +1,94 @@
+#! /bin/sh
+#
+#	mhlzip title rtype
+#
+#
+
+web_root="http://www.pos.co.il/~marty"
+file_root="${PATH_TRANSLATED}"
+
+errfile=/tmp/txz$$
+zipfile="/tmp/`date +%M%d%H%M%S`.zip"
+title="$1"
+rtype="$2"
+
+status="201"
+ziplength=""
+
+songdir="music/midi/songs"
+zipopts="-k"
+ziptype="zip"
+
+case "$rtype" in
+Z)	zipopts="${zipopts} -0"
+	ziptype="${ziptype}mzb"
+	;;
+esac
+
+http_prolog()
+{
+	echo "${SERVER_PROTOCOL} ${status}"
+	echo "Server: ${SERVER_SOFTWARE}"
+	echo "Content-type: application/x-${ziptype}-compressed"
+	echo "Content-length: ${ziplength}"
+	echo "Pragma: no-cache"
+	echo ""
+}
+
+#
+#	This function was written because the zipfile was not being
+#	deleted when the browser "canceled" the ZIPfile transfer.
+#	The "sleep 2" is done to allow enough time for "cat" to
+#	open the file...
+#
+removezipinode()
+{
+	sleep 2
+	rm -f $zipfile > /dev/null 2>&1
+}
+
+outputzip()
+{
+	chmod a+r $zipfile > /dev/null 2>&1
+	cat /home/marty/website/cgi-bin/zeroes >> $zipfile
+	set - `wc -c $zipfile`
+	ziplength="$1"
+	http_prolog
+	removezipinode &
+	cat $zipfile
+	rm -f $zipfile > /dev/null 2>&1
+	sleep 2
+}
+
+mkzip()
+{
+	> $errfile
+	(	
+		if cd $file_root/$songdir > $errfile; then
+			if zip ${zipopts} -@ $zipfile > $errfile 2>&1; then
+				outputzip
+			else
+				return
+			fi
+		else
+			return
+		fi
+	)
+}
+
+cleanupandleave()
+{
+	rm -r $errfile
+	exit $*
+	# notreached
+}
+
+if mkzip; then
+	cleanupandleave
+	# notreached
+fi
+
+cat $errfile 1>& 2
+cleanupandleave 1
+
+# end of mhlzip

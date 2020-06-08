@@ -1,0 +1,64 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<base target="menu">
+</head>
+
+<body>
+
+<script type="text/javascript">
+
+<!--
+function doUpdate(sel)
+{
+	if (sel.value != "") {
+		parent.menu.document.location.href= sel.value + ".html" ;
+		parent.main.document.location.href= sel.value + "-intro.html" ;
+	}
+	else {
+		parent.menu.document.location.href= "rnmmenu.html" ;
+		parent.main.document.location.href= "rnmmain.html" ;
+	}
+}
+function doAdm(sel)
+{
+	var re, path ;
+
+	re= /\S*\/(\S+)\.\S*/ ;
+	path= parent.main.document.location.pathname.replace(re, "$1") ;
+	parent.main.document.location.href= "mkadm.cgi?" + path ;
+}
+-->
+
+</script>
+
+<form name="mainform">
+	<center>
+
+	<table>
+	<tr>
+	<td align=center valign=middle>
+		<input name="adm" value="Adm" type="button" onclick="doAdm(this)">
+	</td>
+
+	<td align=center>
+		<select name="bothsel" size="1" onchange="return doUpdate(this);">
+			<option value="">Select</option>
+			<option value="maui">Maui Moments</option>
+			<option value="triathalon">Renee's triathalon</option>
+			<option value="mauiflight">Maui flight</option>
+			<option value="coronado">Renee's birthday in Coronado</option>
+			<option value="shilo">Shiloh!</option>
+		</select>
+	</td>
+
+	</tr>
+
+	</table>
+	</center>
+</form>
+
+</body>
+
+</html>

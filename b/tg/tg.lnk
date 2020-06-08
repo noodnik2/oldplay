@@ -1,0 +1,15 @@
+proccmd+
+getline+
+pfkey+
+doesc+
+dobs+
+getkey+
+queue+
+screen+
+sco+
+scroll+
+dataseg+
+biosputc+
+draw+
+cursor+
+spc

@@ -1,0 +1,44 @@
+
+base object class:			Obj
+
+	- defines global base object
+	- defines several generic method pointer types
+
+
+object pointer array class:		OPAry
+
+	- derived from "Obj"
+	- class managing list of pointers to objects derived from "Obj"
+	- has methods for:
+		a. adding items to list
+		b. deleting an item from the list
+		c. growing/shrinking the list size
+		d. list traversal (returns "Obj *")
+		e. finding an object in the list given compare method
+		f. assignment operator, copy constructor
+		g. inserting (from) another "OPAry" object
+
+
+ordered object pointer array class:	OrdOPAry
+
+	- derived from "OPAry"
+	- constructor receives compare method defining sort order
+	- overrides methods for:
+		a. adding items to list (inserts objects in proper order)
+		b. assignment operator, copy constructor
+		c. inserting (from) another "OPAry" object
+	- adds methods for:
+		a. finding an object in the list with no compare method
+		   (uses binary search)
+		b. determining current sort order
+
+
+sortable object pointer array class:	SrtOPAry
+
+	- derived from "OPAry"
+	- adds methods for:
+		a. sorting items in list given compare method
+		b. assignment operator, copy constructor
+		c. determining current sort order
+
+

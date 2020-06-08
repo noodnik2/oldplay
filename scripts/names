@@ -1,0 +1,18 @@
+
+#
+# this is a shell script
+#
+# created in order to refresh my memory about shell scripts
+#
+
+case $# in
+0)	echo "${0}: ${0} arg1 arg2 ..."
+	exit 1
+	;;
+esac
+
+for i in $*
+do
+	echo `basename $i '\..*'`
+done
+

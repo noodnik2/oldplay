@@ -1,0 +1,304 @@
+#define	Revision		47
+
+/*
+
+	a21flog.cpp		qad-NewARC21 File Log/Unix
+				Copyright (C) 1994-1995, Cohtahal Ltd.
+	
+*/
+
+/*
+	#includes
+*/
+
+#include	"compiler.h"
+#include	"a21flog.h"
+#include	"a21flog0.h"
+
+#include	<memory.h>
+#include	<string.h>
+#include	<time.h>
+
+/*
+	internal #defines
+*/
+#define	A21FTSMAX_SIZE	24
+
+/*
+	internal data
+*/
+static char a21flog_szPrintBuffer[A21LDV_PRINTFBUFSIZE] ;
+static A21FLOG a21flog_a[A21LDV_MAXA21LOGS] ;
+static int n_a21flog= 0 ;
+
+/*
+	forward templates for internal subroutines
+*/
+static PA21FLOG alloc_logentry() ;
+static void dealloc_logentry(PA21FLOG) ;
+static M_SBOOL openfile(PA21FLOG pa21flog, int flags) ;
+static void closefile(PA21FLOG) ;
+static PA21FLOG find_pa21flog(int fnum) ;
+static M_SBOOL write_title(PA21FLOG, char *msg) ;
+static M_SBOOL write_string(PA21FLOG, int lmgn, M_SLPCSTR pfx, M_SLPCSTR str) ;
+static M_SBOOL get_timestamp(char *pszTimeStamp) ;
+
+/*
+	entry points
+*/
+HA21LOG a21flog_open(M_SLPCSTR fn, int fnum, int flags)
+{
+	PA21FLOG pa21flog ;
+
+	if (find_pa21flog(fnum) != (PA21FLOG) NULL) {
+		return(HA21LOG_ERROR) ;			/* already open */
+	}
+
+	pa21flog= alloc_logentry() ;
+	if (pa21flog == (PA21FLOG) NULL) {
+		return(HA21LOG_ERROR) ;			/* no slots free */
+	}
+
+	pa21flog->fnum= fnum ;
+	pa21flog->flags= flags ;
+	pa21flog->ult0= (M_SULONG) time(0) ;
+	strncpy(pa21flog->szFileName, fn, A21FLMAX_FILENAME) ;
+
+	if (!openfile(pa21flog, pa21flog->flags)) {
+		dealloc_logentry(pa21flog) ;
+		return(HA21LOG_ERROR) ;			/* can't open file */
+	}
+
+	write_title(pa21flog, "Start") ;
+
+	return(pa21flog2ha21flog(pa21flog)) ;
+}
+
+M_SBOOL a21flog_close(int fnum)
+{
+	PA21FLOG pa21flog ;
+
+	pa21flog= find_pa21flog(fnum) ;
+	if (pa21flog == (PA21FLOG) NULL) return(M_CFALSE) ;
+	write_title(pa21flog, "End") ;
+	closefile(pa21flog) ;
+	dealloc_logentry(pa21flog) ;
+	return(M_CTRUE) ;
+}
+
+M_SBOOL a21flog_puts(LPA21LMID lplmid, M_SLPCSTR lpszString)
+{
+	PA21FLOG pa21flog ;
+
+	if (!lpszString) return(M_CTRUE) ;
+	pa21flog= find_pa21flog(lplmid->fnum) ;
+	if (pa21flog == (PA21FLOG) NULL) return(M_CFALSE) ;
+	return(write_string(
+		pa21flog,
+		pa21flog->lmgn,
+		lplmid->prefix,
+		lpszString
+	)) ;
+}
+
+M_SBOOL a21flog_vprintf(LPA21LMID lplmid, M_SLPCSTR lpszFormat, va_list ap)
+{
+	PA21FLOG pa21flog= find_pa21flog(lplmid->fnum) ; ;
+
+	if (!lpszFormat) return(M_CTRUE) ;
+	vsprintf(a21flog_szPrintBuffer, lpszFormat, ap) ;
+	if (pa21flog == (PA21FLOG) NULL) return(M_CFALSE) ;
+	return(write_string(
+		pa21flog,
+		pa21flog->lmgn,
+		lplmid->prefix,
+		a21flog_szPrintBuffer
+	)) ;
+}
+
+M_SBOOL a21flog_printf(LPA21LMID lplmid, M_SLPCSTR lpszFormat, ...)
+{
+	va_list ap ;
+
+	if (!lpszFormat) return(M_CTRUE) ;
+	va_start(ap, lpszFormat) ;
+	return(a21flog_vprintf(lplmid, lpszFormat, ap)) ;
+}
+
+M_SBOOL a21flog_putmodulename(LPA21LMID lplmid, M_SPID hPid)
+{
+	puts("<<MODULE NAME GOES HERE>>") ;
+	return(M_CTRUE) ;
+}
+
+M_SBOOL a21flog_tabto(LPA21LMID lplmid, int column)
+{
+	PA21FLOG pa21flog= find_pa21flog(lplmid->fnum) ;
+	if (pa21flog == (PA21FLOG) NULL) return(M_CFALSE) ;
+	
+	if (pa21flog->column == 0) {
+		if (((int) strlen(lplmid->prefix))>= column) {
+			return(M_CTRUE) ;
+		}
+	}
+	while(pa21flog->column< column) {
+		a21flog_puts(lplmid, " ") ;
+	}
+	return(M_CTRUE) ;
+}
+
+M_SBOOL a21flog_setlmgn(LPA21LMID lplmid, int lmgn)
+{
+	PA21FLOG pa21flog= find_pa21flog(lplmid->fnum) ;
+	if (pa21flog == (PA21FLOG) NULL) return(M_CFALSE) ;
+	pa21flog->lmgn= lmgn ;
+	return(M_CTRUE) ;
+}
+
+/*
+	static internal routines
+*/
+
+static PA21FLOG alloc_logentry()
+{
+	int i ;
+	PA21FLOG pa21flog ;
+
+	for (
+		i= 0, pa21flog= a21flog_a;
+		i< A21LDV_MAXA21LOGS;
+		i++, pa21flog++
+	) {
+		if (!pa21flog->busy) {
+			memset(pa21flog, '\0', sizeof(A21FLOG)) ;
+			pa21flog->busy= M_CTRUE ;
+			return(pa21flog) ;
+		}
+	}
+	return((PA21FLOG) NULL) ;
+}
+
+static void dealloc_logentry(PA21FLOG pa21flog)
+{
+	pa21flog->busy= M_CFALSE ;
+}
+
+static M_SBOOL openfile(PA21FLOG pa21flog, int flags)
+{
+	pa21flog->fp= fopen(
+		pa21flog->szFileName,
+		(flags & A21LF_APPEND)? "a": "w"
+	) ;
+	if (pa21flog->fp == (FILE *) NULL) return(M_CFALSE) ;
+	return(M_CTRUE) ;
+}
+
+static void closefile(PA21FLOG pa21flog)
+{
+	if (pa21flog->fp != (FILE *) NULL) {
+		fclose(pa21flog->fp) ;
+		pa21flog->fp= 0 ;
+	}
+}
+
+static PA21FLOG find_pa21flog(int fnum)
+{
+	int i ;
+
+	for (i= 0; i< A21LDV_MAXA21LOGS; i++) {
+		if (!a21flog_a[i].busy) continue ;
+		if (a21flog_a[i].fnum == fnum) {
+			return((PA21FLOG) &a21flog_a[i]) ;
+		}
+	}
+	return((PA21FLOG) NULL) ;
+}
+
+static M_SBOOL write_title(PA21FLOG pa21flog, char *msg)
+{
+	char szTimeStamp[A21FTSMAX_SIZE+1] ;
+
+	if (pa21flog->flags & A21LF_NM_TITLE) return(M_CTRUE) ;
+	get_timestamp(szTimeStamp) ;
+	sprintf(a21flog_szPrintBuffer, "*** Log: %s: %s\n", szTimeStamp, msg) ; 
+	return(write_string(
+		pa21flog,
+		0,
+		"a21flog: ",
+		a21flog_szPrintBuffer
+	)) ;
+}
+
+static M_SBOOL write_string(
+	PA21FLOG pa21flog,
+	int lmgn,
+	M_SLPCSTR lpszPrefix,
+	M_SLPCSTR lpszString
+) {
+	char c ;
+	M_SULONG ult ;
+	char szTS[33] ;
+
+	if (pa21flog == (PA21FLOG) NULL) {
+		return(M_CFALSE) ;
+	}
+
+	if (pa21flog->fp == (FILE *) NULL) {
+		return(M_CFALSE) ;
+	}
+
+	while((c= (*lpszString)) != '\0') {
+		if (pa21flog->column == 0) {
+			if (pa21flog->flags & A21LF_TSTAMP) {
+				ult= (M_SULONG) time(0) ;
+				sprintf(szTS, "%05lu ", ult - pa21flog->ult0) ;
+				fputs(szTS, pa21flog->fp) ;
+			}
+			fputs(lpszPrefix, pa21flog->fp) ;
+			pa21flog->column+= strlen(lpszPrefix) ;
+			while((pa21flog->column)< lmgn) {
+				fputs(" ", pa21flog->fp) ;
+				pa21flog->column++ ;
+			}
+		}
+		fputc(c, pa21flog->fp) ;
+		if (c == '\n')	{
+			pa21flog->column= 0 ;
+			if (pa21flog->flags & A21LF_FLUSH) {
+				fflush(pa21flog->fp) ;
+			}
+			if (pa21flog->flags & A21LF_REOPEN) {
+				closefile(pa21flog) ;
+				if (!openfile(
+					pa21flog,
+					pa21flog->flags | A21LF_APPEND
+				)) {
+					return(M_CFALSE) ;
+				}
+			}
+		}
+		else {
+			pa21flog->column++ ;
+		}
+		lpszString++ ;
+	}
+	return(M_CTRUE) ;
+}
+
+static M_SBOOL get_timestamp(char *pszTimeStamp)
+{
+	time_t t ;
+	char *pszCtimeTimeStamp ;
+
+	time(&t) ;
+	pszCtimeTimeStamp= ctime(&t) ;
+	if (pszCtimeTimeStamp == (char *) NULL) {
+		pszTimeStamp[0]= '\0' ;
+		return(M_CFALSE) ;
+	}
+	memcpy(pszTimeStamp, pszCtimeTimeStamp, A21FTSMAX_SIZE) ;
+	pszTimeStamp[A21FTSMAX_SIZE]= '\0' ;
+	return(M_CTRUE) ;
+}
+
+/* end of a21flog.cpp */

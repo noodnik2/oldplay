@@ -1,0 +1,86 @@
+
+#	wrioc:  write cpio -c data set to specified file or diskette
+#
+#	Copyright (c) 1989 by C.R.C. 
+#
+
+ADRIVE=/dev/rdsk/f0q15dt
+BDRIVE=/dev/rdsk/f1q18dt
+
+case $# in
+0|1)	cat 1>&2 <<\!
+wrioc:	Usage:  wrioc <dest> {filename|dirname} [{filename|dirname} ..]
+                The special <dest> "a:" is understood to mean the A: drive, 
+		"b:" is understood to be the B: drive, and otherwise <dest>
+                is assumed to be a file which must not already exist.
+
+                For the remaining arguments, if a name is a dirname, it is
+	        taken to mean all the files in the subtree.
+
+wrioc:  no action taken
+!
+	exit 1
+	;;
+esac
+
+case "$1" in
+a:|A:)	DEST=$ADRIVE
+	;;
+b:|B:)	DEST=$BDRIVE
+	;;
+*)	if [ -f $1 ]
+	then
+		echo "wrioc:  $1 already exists; erase it first" 1>&2
+		echo "wrioc:  no action taken" 1>&2
+		exit 2
+	fi
+	if [ -d $1 ]
+	then
+		echo "wrioc:  $1 is a directory; type wrioc for Usage" 1>&2
+		echo "wrioc:  no action taken" 1>&2
+		exit 3
+	fi
+	if [ -b $1 ]
+	then
+		echo "wrioc:  cannot cpio(1) to a block special file" 1>&2
+		echo "wrioc:  no action taken" 1>&2
+		exit 4
+	fi
+	DEST=$1
+	;;
+esac
+
+shift 1
+WORKFILE=${TMPDIR:-/tmp}/wrioc$$
+
+for i in $*
+do
+	if [ ! -r $i ]
+	then
+		echo "wrioc:  $i not accessible" 1>&2
+		echo "wrioc:  no action taken" 1>&2
+		rm $WORKFILE > /dev/null 2>&1
+		exit 4
+	fi
+	if [ -f $i ]
+	then
+		echo $i >> $WORKFILE
+	elif [ -d $i ]
+	then
+		find $i -print >> $WORKFILE
+	else
+		echo "wrioc:  $i is not a file or directory" 1>&2
+		echo "wrioc:  no action taken" 1>&2
+		rm $WORKFILE > /dev/null 2>&1
+		exit 5
+	fi
+done
+
+if cat $WORKFILE | cpio -ovBc > $DEST
+then
+	rm $WORKFILE > /dev/null 2>&1
+	exit 0
+fi
+rm $WORKFILE > /dev/null 2>&1
+echo "wrioc:  cpio(1) failed" 1>&2
+exit 9

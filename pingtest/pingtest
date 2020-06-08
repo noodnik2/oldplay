@@ -1,0 +1,32 @@
+# pingtest
+
+case "$#" in
+	1)	;;
+	*)	echo "Please give the IP# you want to $0" 1>&2
+		exit 1
+		;;
+esac
+
+mispar="$1"
+progname=`basename $0`
+sleeptime=333
+npings=20
+logfile="/tmp/$progname.$$"
+
+dopingie()
+{
+	echo "${1}: `date`"
+	ping -c ${npings} $1 2>&1
+}
+
+doit()
+{
+	echo "${logfile}: `date`"
+	dopingie $1 >> ${logfile}
+}
+
+while true; do
+	doit ${mispar}
+	sleep ${sleeptime}
+done
+

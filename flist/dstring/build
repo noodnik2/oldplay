@@ -1,0 +1,1 @@
+cc $1 -omkdstr mkdstr.c cescstr.c gettok.c bswap.c dsparse.c

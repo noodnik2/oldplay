@@ -1,0 +1,4 @@
+cp compiler.h compiler.old
+cp makefile   makefile.old
+cp compiler.uxv compiler.h
+cp makefile.uxv makefile

@@ -1,0 +1,63 @@
+
+#
+# this is a shell script
+#
+
+prog=${0}
+
+syntax()
+{
+	echo "${prog}: ${prog} {upper|lower} filelist ..." 1>& 2
+	exit 1
+}
+
+move()
+{
+	case "$1" in
+		"$2")	echo "case not changed for $1" 1>& 2
+			return
+			;;
+	esac
+
+	if [ -f $2 ]; then
+		echo "$2 exists; not replaced with $1" 1>& 2
+		return 
+	fi
+
+	if mv $1 $2; then
+		echo "$1 moved to $2" 1>& 2
+	else
+		echo "$1 cannot be moved to $2; error $?" 1>& 2
+	fi
+
+}
+
+case $# in
+	0)	syntax ;;
+esac
+
+case $1 in
+	u|up|upper)	cas="upper" ;;
+	l|low|lower)	cas="lower" ;;
+	*)		syntax ;;
+esac
+
+shift
+
+case "$cas" in
+
+	upper)
+		for i in $*; do
+			ucname=`echo $i | tr "[a-z]" "[A-Z]"`
+			move $i $ucname
+		done
+		;;
+
+	lower)
+		for i in $*; do
+			lcname=`echo $i | tr "[A-Z]" "[a-z]"`
+			move $i $lcname
+		done
+		;;
+
+esac

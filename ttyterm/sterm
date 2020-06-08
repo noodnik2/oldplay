@@ -1,0 +1,30 @@
+
+case "$TERMTTY" in
+"")	echo "must set TERMTTY variable to tty-device." 1>& 2 
+	exit 1
+	;;
+esac
+
+ttysave1="/tmp/sttyfile1"
+ttysave2="/tmp/sttyfile2"
+lcltty=`tty`
+
+stty -g < $TERMTTY > $ttysave1
+stty -g < $lcltty > $ttysave2
+
+stty -echo -echoe -echok -echonl -icanon eol  eof  > $lcltty
+stty -echo -echoe -echok -echonl -icanon eol  eof  > $TERMTTY
+
+cat < $TERMTTY > $lcltty &
+cat < $lcltty > $TERMTTY
+
+if [ -r $ttysave1 ] then;
+	stty `cat $ttysave1` > $TERMTTY
+	rm $ttysave1
+fi
+
+if [ -r $ttysave2 ] then;
+	stty `cat $ttysave2` > $lcltty
+	rm $ttysave2
+fi
+

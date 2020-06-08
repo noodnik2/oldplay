@@ -1,0 +1,26 @@
+
+#
+#	dtree			Print directory tree
+#
+#				Based on Command from UnixWorld Magazine
+#				November 1990, page 164.
+#
+
+tree()
+{
+	(cd $1; pwd)
+	find $1 -type d -print | sort -f | sed \
+		-e "s,^$1,," -e "/^$/d" \
+		-e "s,[^/]*/\([^/]*\)$, \`------\1," \
+		-e "s,[^/]*/, |     ,g"
+}
+
+case "$#" in
+0)	dirlist="." ;;
+*)	dirlist="$*" ;;
+esac
+
+for dir in $dirlist; do
+	tree $dir
+done
+

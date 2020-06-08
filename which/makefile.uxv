@@ -1,0 +1,37 @@
+
+#
+#	Makefile for 'which' program under Unix
+#
+
+PROG=which
+SHELL= /bin/sh
+# DESTDIR= ${HOME}/bin
+DESTDIR= /usr/local/bin
+DGRP=bin
+
+CFLAGS= -O
+
+.c.o:
+	cc -c ${CFLAGS} $*.c
+
+#cc -o $@ -c ${CFLAGS} $*.c
+
+WHICH_OBJ= which.o srchfile.o
+
+${PROG}: ${WHICH_OBJ}
+	cc -o $@ ${WHICH_OBJ}
+
+install: ${PROG}
+	cp ${PROG} ${DESTDIR}
+	strip ${DESTDIR}/${PROG}
+	chmod 775 ${DESTDIR}/${PROG}
+	chgrp ${DGRP} ${DESTDIR}/${PROG}
+	@echo $@: ${DESTDIR}/${PROG}
+
+clean:
+	rm -f ${PROG} core *.o
+
+which.o:	compiler.h srchfile.h
+
+srchfile.o:	compiler.h srchfile.h
+

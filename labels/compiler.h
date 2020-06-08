@@ -1,0 +1,108 @@
+/*
+
+	compiler.h:		qad-Arc21 Standard C source #include file
+				Copyright (C) 1991-1992, Contahal Ltd.
+
+	(any compiler-specific macros or definitions go here)
+
+	C Compiler #include file for ALL source modules.
+	(to be included AFTER all standard system #include files)
+	
+	Macros:
+		COMPILER	specific compiler identification
+		OPSYS		"generic name" of operating system
+		OPSLVL		"minumum level" of operating system
+		MACHINE		Specific machine or architechture
+		BYTEORDER	Byte ordering within words
+
+	(user must set all three to configure new instance of compiler.h)
+	(change following comment AND definition at end of file)
+
+	This instance:		
+
+		OPSYS		OPMSDOS
+		OPSLVL		OPLDOS31
+		COMPILER	CCMS5
+		MACHINE		IBMPC
+		BYTEORDER	LOHI
+
+*/
+
+/*
+	"generic" operating systems supported:
+*/
+#define		OPUNIX		1		/* UNIX */
+#define		OPMSDOS		2		/* MS/PC-DOS  */
+
+/*
+	OPSYS==OPUNIX Operating system levels:
+*/
+#define		OPLUXV		101		/* AT&T UnixV */
+#define		OPLBSD42	102		/* Berkeley 4.2 */
+#define		OPLXENIX	103		/* Xenix */
+#define		OPLSOS		104		/* Sun OS */
+
+/*
+	OPSYS==MSDOS Operating system levels:
+*/
+#define		OPLDOS21	201		/* MS-DOS 2.1 */
+#define		OPLDOS31	202		/* MS-DOS 3.1 */
+#define		OPLDOS41	203		/* MS-DOS 4.1 */
+#define		OPLDOS51	204		/* MS-DOS 5.1 */
+
+/*
+	specific compilers supported:
+*/
+#define		CCUXV		1		/* standard Unix V compiler */
+#define		CCMS5		2		/* microsoft C 5.xx	    */
+#define		CCMS6		3		/* microsoft C 6.xx	    */
+#define		CCBSD		4		/* standard BSD4.x compiler */
+#define		CCXENIX		5		/* standard Xenix compiler  */
+#define		CCSUN4		6		/* sun-OS 4 compiler        */
+
+/*
+	machines supported:
+*/
+#define		NCR_NST		1		/* NCR 3000 */
+#define		SUN_360		2		/* SUN 3/60 */
+#define		HP_9000		3		/* HP 9000 */
+#define		DG_AVIION	4		/* DATA GENERAL AVIION */
+#define		NCR_TOWER	5		/* NCR TOWER */
+#define		IBMPC		6		/* Standard IBM PC */
+#define		SUN_SPARC	7		/* Sun SparcStation */
+
+/*
+	byte ordering
+*/
+#define		HILO		0
+#define		LOHI		1
+
+/*
+	Definitions in use for this product:
+*/
+#define		OPSYS		OPMSDOS
+#define		OPSLVL		OPLDOS31
+#define		COMPILER	CCMS5
+#define		MACHINE		IBMPC
+#define		BYTEORDER	LOHI
+
+#ifndef	NULL
+#define	NULL	0
+#endif
+
+#ifndef	STDERR
+#if	OPSYS==OPMSDOS
+#define	STDERR	stdout
+#else
+#define	STDERR	stderr
+#endif
+#endif
+
+#ifndef	STDTTY
+#if	OPSYS==OPMSDOS
+#define	STDTTY	stderr
+#else
+#define	STDTTY	stdout
+#endif
+#endif
+

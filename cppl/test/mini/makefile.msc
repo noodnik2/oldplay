@@ -1,0 +1,31 @@
+#	Revision:	1
+#
+
+#
+#
+#
+#
+
+ROOT_DIR=..\..\..
+CPPL_DIR=$(ROOT_DIR)\cppl
+CPPL_LIB=$(ROOT_DIR)\lib\cppl.lib
+
+.SUFFIXES:	.cpp
+
+.cpp.obj:
+	cl /c /AL /I $(CPPL_DIR) $*.cpp
+
+all:	wrtest.exe
+
+new:	clean
+	$(MAKE) -f makefile.msc
+
+clean:
+	del wrtest.exe
+	del wrtest.obj
+	del *.bak
+
+wrtest.exe:	wrtest.obj
+	cl /o wrtest.exe wrtest.obj $(CPPL_LIB)
+
+# end of makefile for iniacc test

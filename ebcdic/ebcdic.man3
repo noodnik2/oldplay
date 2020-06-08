@@ -1,0 +1,71 @@
+	EBCDIC(3)		C LIBRARY FUNCTIONS		EBCDIC(3)
+
+
+	NAME
+		ebcdic - loadable EBCDIC/ASCII translation functions
+
+
+	SYNOPSIS
+
+		#include	"ebcdic.h"
+
+		int ebcinit(table);
+		int ebctrans(rec, length);
+		int ebc2asc(e);
+		int ebcistext(e);
+		int ebcisok(e);
+
+		char *table, *rec;
+		int length, e;
+
+
+	DESCRIPTION
+
+		These functions provide a way to translate EBCDIC text
+		characters into ASCII.  First, the user must call
+		ebcinit(3) with the name of the desired translation
+		table.  A (char *)NULL value selects the default
+		translation file.  If ebcinit() cannot read the 
+		table, it returns a nonzero value, otherwise the
+		translation facility is initialized and the func-
+		tions ebctrans(), ebc2asc(), ebcistext(), and 
+		ebcisok() may now be used to perform translation.
+		
+		The translation file is an ASCII text file containing
+		two elements per line.  The first token on each line
+		is the EBCDIC value (in decimal) that corresponds to
+		the second (ASCII) value, either a letter or a number.
+		See ebcdic(5) for more detailed info about file format.
+
+		To translate a buffer full of EBCDIC text into ASCII,
+		use the ebctrans() function, passing the buffer and
+		the length of the buffer.  The routine will return
+		with 0 if all characters in the buffer were translated,
+		-1 if there were no EBCDIC text characters in the
+		buffer, or 1 if only some characters were changed.
+
+		To translate a single EBCDIC character into ASCII,
+		use the function ebc2asc().
+
+		To check if an EBCDIC character is a text character,
+		use the indicator function ebcistxt().
+
+		To check if a character is a potential EBCDIC value,
+		use the indicator function ebcisok().  Only characters
+		for which ebcisok() is true should be used as arguments
+		to ebc2asc() or ebcistxt().
+
+
+	NOTES
+		Beware that ebc2asc(), ebcistxt(), and ebcisok() are
+		implemented as macros.  Because of this, there may be
+		side-effects on arguments passed to them.
+
+		
+	ALSO SEE
+		ebcdic(1), ebcdic(5)
+
+
+	FILES
+		/usr/local/bin/ebcdic.T    Default translation table
+

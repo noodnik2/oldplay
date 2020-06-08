@@ -1,0 +1,116 @@
+
+#	Revision:	1
+#
+
+PROG= browse
+HELP= browse.man1
+# DESTDIR= ${HOME}/bin
+DESTDIR= /usr/local/bin
+# DGRP=usr
+DGRP=bin
+
+PROG_OBJ= \
+browse.o \
+clgetopt.o \
+dobrowse.o \
+srchfile.o \
+dokeys.o \
+keycmd.o \
+keybrow.o \
+keyfunc.o \
+docmd.o \
+domore.o \
+doset.o \
+doerror.o \
+dodraw.o \
+slfmt.o \
+rlfmt.o \
+redraw.o \
+statfile.o \
+strim.o \
+scnmode.o \
+stccpy.o \
+ebcdic.o \
+cmdcmp.o \
+index.o \
+rrd.o \
+syntax.o
+
+${PROG}: ${PROG_OBJ}
+	cc -o ${PROG} ${CFLAGS} ${PROG_OBJ} -lncurses
+	strip ${PROG}
+	@echo $@: created
+
+install_${PROG}: ${PROG}
+	cp ${PROG} ${DESTDIR}
+	chmod 775 ${DESTDIR}/${PROG}
+	chgrp ${DGRP} ${DESTDIR}/${PROG}
+	@echo $@: ${DESTDIR}/${PROG}
+
+install_${HELP}: ${HELP}
+	cp ${HELP} ${DESTDIR}/${HELP}
+	chmod ug=rw,o=r ${DESTDIR}/${HELP}
+	chgrp ${DGRP} ${DESTDIR}/${HELP}
+	@echo $@: ${DESTDIR}/${HELP}
+
+install: install_${PROG} install_${HELP}
+	
+clean:
+	rm -f *.o core ${PROG}
+	@echo $@: ${PROG}
+
+compiler.h:
+	cp compiler.nst compiler.h
+
+ebcdic.o:	ebcdic.h compiler.h
+
+browse.o:	compiler.h clgetopt.h browse.h 
+
+clgetopt.o:	compiler.h clgetopt.h 
+
+srchfile.o:	compiler.h srchfile.h
+
+cmdcmp.o:	compiler.h browse.h 
+
+dobrowse.o:	compiler.h browse.h 
+
+docmd.o:	compiler.h browse.h 
+
+dodraw.o:	compiler.h browse.h 
+
+doerror.o:	compiler.h clgetopt.h browse.h 
+
+dokeys.o:	compiler.h browse.h 
+
+domore.o:	compiler.h browse.h 
+
+doset.o:	compiler.h browse.h 
+
+index.o:	compiler.h 
+
+keybrow.o:	compiler.h browse.h 
+
+keycmd.o:	compiler.h browse.h 
+
+keyfunc.o:	compiler.h browse.h 
+
+redraw.o:	compiler.h browse.h 
+
+rlfmt.o:	compiler.h browse.h 
+
+rrd.o:		compiler.h browse.h 
+
+scnmode.o:	compiler.h 
+
+slfmt.o:	compiler.h browse.h 
+
+statfile.o:	compiler.h browse.h 
+
+stccpy.o:	compiler.h 
+
+strim.o:	compiler.h 
+
+syntax.o:	compiler.h browse.h srchfile.h
+
+xpand.o:	compiler.h browse.h
+

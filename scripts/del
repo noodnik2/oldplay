@@ -1,0 +1,156 @@
+
+#
+#	del:	delete files by moving to "deleted" directory
+#
+#	del -l
+#	del -x
+#	del [-d dir] file [file [...]]
+#
+
+prog=$0
+tmpdir="${HOME}/.deleted"
+action="mv"
+lscmd="ls -FCR"
+datecode=`date | cut -c5-7,9-10,12-13,15-16,18-19`
+
+syntax()
+{
+	cat 1>& 2 << \!
+
+	del:	"delete" file(s) by moving them to 'delete' directory
+
+	syntax:
+	  (1)	del -l
+	  (2)	del -x
+	  (3)	del [-d dir] file [file [...]]
+
+	Invocation (1) lists files currently in the 'delete' directory.
+
+	Invocation (2) expunges (permanently removes) previosly deleted.
+
+	Invocation (3) moves file(s) to the 'delete' directory, and
+	optionally allows the user to select the 'delete' directory.
+
+	By default the 'delete' directory is: $HOME/.deleted
+
+!
+	exit 1
+}
+
+note()
+{
+	echo "${prog}: $*" 1>&2
+}
+
+error()
+{
+	echo "${prog}: $*" 1>&2 
+}
+
+move()
+{
+	if [ -d ${tmpdir}/$1 ]; then
+		mv $1 ${tmpdir}/$1/${datecode}
+		return $?
+	fi
+	if [ -f ${tmpdir}/$1 ]; then
+		if mv ${tmpdir}/$1 ${tmpdir}/$1.old; then
+			if mkdir ${tmpdir}/$1; then
+				if mv ${tmpdir}/$1.old ${tmpdir}/$1/$1; then
+					mv $1 ${tmpdir}/$1/${datecode}
+				fi
+			fi
+		fi
+		return $?
+	fi
+	mv $1 ${tmpdir}/$1
+}
+
+confirm()
+{
+	while true; do
+		note "$*\c"
+		read x
+		case "$x" in
+			y|Y|yes|YES|Yes)	return 0 ;;
+			n|N|no|NO|No)		return 1 ;;
+		esac
+	done
+}
+
+while getopts xld: c; do
+	case "$c" in
+	x)	action="xp" ;;
+	l)	action="ls" ;;
+	d)	tmpdir="$OPTARG" ;;
+	*)	error "invalid option: ${c}"
+		exit 1
+		;;
+	esac
+done
+shift `expr ${OPTIND} - 1`
+
+case "$action" in
+xp|ls)	case "$#" in
+		0)	;;
+		*)	error "invalid syntax: \"${prog}\" for help"
+			exit 1
+			;;
+	esac
+	;;
+*)	case "$#" in
+		0)	syntax ;;
+	esac
+	;;
+esac
+
+if [ ! -d $tmpdir ]; then
+	if mkdir $tmpdir; then
+		note "directory created: ${tmpdir}"
+	else
+		error "can't create ${tmpdir}"
+		exit 1
+	fi
+fi
+
+case "$action" in
+
+xp)	set ${tmpdir}/*
+	if [ $# -ne 1 -o "${tmpdir}/*" != "$1" ]; then	
+		${lscmd} ${tmpdir}/* 1>&2
+		if confirm "ok to permanently remove all? "; then
+			note "performing: rm -r ${tmpdir}"
+			rm -r ${tmpdir}
+		else
+			error "nothing done"
+		fi
+	else
+		error "no deleted files; nothing done"
+	fi
+	;;
+
+mv)	if [ $# -gt 1 ]; then
+		note $* 1>&2
+		if confirm "ok to move to ${tmpdir}? "; then
+			note "moving..."
+		else
+			error "nothing done"
+			exit 1
+		fi
+	fi
+
+	for x in $*; do
+		move $x
+	done
+	;;
+
+ls)	${lscmd} ${tmpdir}
+	;;
+
+*)	error "action unknown: ${action}"
+	exit 1
+	;;
+
+esac
+
+exit $?

@@ -1,0 +1,46 @@
+/*	Revision:	2
+*/
+
+#ifndef	COMPILER_H_INC
+#define	COMPILER_H_INC
+
+/*
+
+	compiler.msw:		qad-NewARC21 Compiler Environment: MS-Windows
+				Copyright (C) 1991-1995, Contahal Ltd.
+
+	Macros:
+		OPSYS		"generic name" of operating system
+		OPSLVL		"minumum level" of operating system
+		UINTFC		User-Interface
+		COMPILER	specific compiler identification
+		MACHINE		Specific machine or architechture
+		BYTEORDER	Byte ordering within words
+
+	(user must set all macros to configure new compilation environment)
+
+*/
+
+/*
+	#include compiler definitions
+*/
+#include	"compdefs.h"
+
+/*
+	Definitions in use for this product:
+*/
+#define		OPSYS		OPSYS_MSWIN
+#define		OPSLVL		OPSLVL_MSW31
+#define		UINTFC		UINTFC_MSW
+#define		COMPILER	COMPILER_MS8
+#define		MACHINE		MACHINE_IBMPC
+#define		BYTEORDER	BYTEORDER_LOHI
+
+/*
+	end of definitions
+*/
+
+/* #ifndef COMPILER_H_INC */
+#endif
+
+/* end of compiler.msd */

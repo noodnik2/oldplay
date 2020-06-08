@@ -1,0 +1,57 @@
+
+prog=`basename ${0}`
+
+case "$TERMTTY" in
+"")	echo "${prog}: TERMTTY not defined." 1>& 2
+	exit 1
+	;;
+*)	dev="$TERMTTY"
+	;;
+esac 
+
+case "$1" in
+-r|r)	rcmd="xm -s"
+	lcmd="xm -r"
+	mode="r"
+	;;
+-s|s)	rcmd="xm -r"
+	lcmd="xm -s"
+	mode="s"
+	;;
+-R|R)	rcmd="xm -S"
+	lcmd="xm -R"
+	mode="r"
+	;;
+-S|S)	rcmd="xm -R"
+	lcmd="xm -S"
+	mode="s"
+	;;
+*)	echo "${prog}: invalid xfer mode: must be {s,r,S,R}" 1>& 2
+	exit 1
+	;;
+esac
+
+case "$2" in
+"")	echo "${prog}: no filename specified" 1 >& 2
+	exit 1
+	;;
+*)	fn1="$2"
+	;;
+esac
+
+case "$3" in
+"")	fn2="$fn1"
+	;;
+*)	fn2="$3"
+	;;
+esac
+
+case "$mode" in 
+s)	echo "$rcmd $fn2" > $dev
+	$lcmd $fn1 < $dev 1> $dev 2> /dev/tty
+	;;
+r)	echo "$rcmd $fn1" > $dev
+	$lcmd $fn2 < $dev 1> $dev 2> /dev/tty
+	;;
+esac
+

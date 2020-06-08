@@ -1,0 +1,3 @@
+
+int getech() ; 
+int getesh() ; 

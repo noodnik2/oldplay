@@ -1,0 +1,75 @@
+
+#
+#	Makefile for Unix "Marty's Remote Line Printer"
+#	Copyright (C) 1992, Contahal Ltd.
+#
+
+INSTDIR=/usr/local/bin
+INSTGRP=bin
+INSTMODE=775
+
+# nst
+NETLIBS= -lnet -lnsl -lsocket
+
+# hp
+# NETLIBS= -lnet 
+
+# sparc
+# NETLIBS=
+
+MRLPD= mrlpd
+MRLP= mrlp
+
+MRLPD_OBJ= mrlpd.o mrlpsub.o mrlpdcmd.o substr.o clgetopt.o
+MRLP_OBJ= mrlp.o mrlpsub.o clgetopt.o
+
+PRODUCTS= $(MRLPD) $(MRLP)
+LINTS= $(MRLPD).lint $(MRLP).lint
+INSTALLS= install.$(MRLPD) install.$(MRLP)
+
+all:	$(PRODUCTS)
+
+all.lint:	$(LINTS)
+
+install.all:	$(INSTALLS)
+
+install.$(MRLP):	$(MRLP)
+	strip $(MRLP)
+	cp $(MRLP) $(INSTDIR)
+	chmod $(INSTMODE) $(INSTDIR)/$(MRLP)
+	chgrp $(INSTGRP) $(INSTDIR)/$(MRLP)
+
+install.$(MRLPD):	$(MRLPD)
+	strip $(MRLPD)
+	cp $(MRLPD) $(INSTDIR)
+	chmod $(INSTMODE) $(INSTDIR)/$(MRLPD)
+	chgrp $(INSTGRP) $(INSTDIR)/$(MRLPD)
+
+$(MRLPD):	$(MRLPD_OBJ)
+		cc -o $@ $(MRLPD_OBJ) $(NETLIBS)
+
+$(MRLP):	$(MRLP_OBJ)
+		cc -o $@ $(MRLP_OBJ) $(NETLIBS)
+
+$(MRLP).lint:	$(MRLP_OBJ)
+		lint $(MRLP_OBJ:.o=.c) > $@
+
+$(MRLPD).lint:	$(MRLPD_OBJ)
+		lint $(MRLPD_OBJ:.o=.c) > $@
+
+clean:
+	rm -f $(PRODUCTS) $(LINTS) *.o core
+
+compiler.h:	compiler.uxv
+	cp	compiler.uxv	compiler.h
+
+clgetopt.o:	compiler.h clgetopt.h 
+
+mrlpd.o:	compiler.h mrlpsub.h substr.h clgetopt.h 
+
+mrlp.o:		compiler.h mrlpsub.h clgetopt.h 
+
+mrlpsub.o:	compiler.h mrlpsub.h clgetopt.h
+
+substr.o:	compiler.h substr.h
+

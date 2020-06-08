@@ -1,0 +1,15 @@
+#! /bin/sh
+
+echo "<html>
+echo "<head>
+echo "</head>
+echo "<body>
+echo "<h1>Results</h1>"
+echo ""
+
+while read x; do
+	echo "$x"
+done
+
+echo "</body>
+echo "</html>

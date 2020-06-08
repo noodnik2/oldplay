@@ -1,0 +1,28 @@
+
+#  whereis [-hs] filename
+#  look for filename 
+#	without options:	$HOME and below 
+#	-h option:		from where we are and below 
+#	-s option:		in the "standard" system places
+
+whereto="$HOME"
+while getopts hs c
+do
+	case $c in 
+	h)	whereto=".";;
+	s)	whereto="/bin /usr/bin /usr/lib";;
+	\?)	exit 2;;
+	esac
+done
+shift `expr $OPTIND - 1`
+
+case $# in 
+0)	echo 'Usage:  whereis [-hs] filename' 1>&2
+	echo '        without arguments:  look in $HOME and below' 1>&2
+	echo '                       -h:  look here and below' 1>&2
+	echo '                       -s:  look in standard system places' 1>&2
+	exit 2
+esac
+
+find $whereto -name $1 -print
+exit 0

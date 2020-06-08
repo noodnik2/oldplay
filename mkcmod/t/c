@@ -1,0 +1,47 @@
+#define	Revision		1
+
+/*
+
+	_@l_.c				_@u_ C Source
+					Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+/*
+	#includes
+*/
+#include	"_@l_.h"
+
+/*
+	local #defines
+*/
+
+/*
+	local typedefs
+*/
+
+/*
+	internal data
+*/
+static _@u_E lclerrno= _@u_E_SUCCESS ;
+
+/*
+	public data
+*/
+
+/*
+	internal function decls
+*/
+
+/*
+	entry points
+*/
+int _@l__init() { return(0) ; }
+int _@l__fini() { return(0) ; }
+_@u_E _@l__errno() { return(lclerrno) ; }
+
+/*
+	internal functions
+*/
+
+/* end of _@l_.c */

@@ -1,0 +1,295 @@
+#! /bin/sh
+#
+#	midiscr query expr sortexpr rtype stype seed
+#
+
+diflag="no"
+progname="`basename $0`"
+webroot="http://www.pos.co.il/~marty"
+fileroot="${PATH_TRANSLATED}"
+bindir="${fileroot}/cgi-bin"
+
+errfile="/tmp/${progname}e.$$"
+listfile="/tmp/${progname}l.$$"
+finame="/tmp/${progname}n.$$"
+ficmts="/tmp/${progname}c.$$"
+
+logfile="${fileroot}/logs/midiuser.log"
+examples_page="${webroot}/midi.htm#examples"
+exprhelp_page="${webroot}/midi.htm#exprhelp"
+
+query="$1"
+expr="$2"
+sortexpr="$3"
+rtype="$4"
+stype="$5"
+seed="$6"
+
+status="200"
+
+ecnl()
+{
+#	echo -n "$*\r\n"
+	echo "$*"
+}
+
+http_prolog()
+{
+	ecnl "${SERVER_PROTOCOL} ${status}"
+	ecnl "Server: ${SERVER_SOFTWARE}"
+	ecnl "Content-type: text/html"
+	ecnl ""
+}
+
+display()
+{
+	if [ "$diflag" = "no" ]; then
+		diflag="yes"
+		http_prolog
+		echo "<html>"
+		echo "<head>"
+		echo "   <title>Marty's MIDI Catalog - Search Results</title>"
+		echo "   <base href=\"$webroot/midiscr\">"
+		echo "</head>"
+	fi
+	echo "$*"
+}
+
+display_end()
+{
+	echo "</body>"
+	echo "</html>"
+}
+
+disperr()
+{
+	logentry "error: $*: `cat $errfile`"
+	printpagehdr "greenguy.gif"
+	display "<h1><i><blink>Oh no!</blink></i></h1>"
+	display "<br clear=all>"
+	display "<hr>"
+	display "<dl>"
+	display "<h2>An error occurred</h2>"
+	display "<font size=4>"
+	display "<dd>"
+	display "
+<p>
+	There was an error processing your request.  The details
+	of the error appear in the section below.
+</p>
+<p>
+	Most likely, the problem is that your
+	<a href=\"${exprhelp_page}\">search expression</a>, or your
+	<a href=\"${exprhelp_page}\">sort expression</a>, was formed
+	incorrectly.  Please check out the
+	<a href=\"${examples_page}\">examples</a> page if all of this
+	jargon about \"expressions\" is getting you down.
+</p>
+<p>
+	If you think you're doing everything right, and you're still
+	getting an error, you can cut and paste the contents of the
+	error detail section below into an e-mail message to me and
+	I'll check it out.  Thanks.
+</p>
+"
+	display "</font></dl>"
+	display "<br clear=all>"
+	display "<hr>"
+	display "<br clear=all>"
+	display "<center>"
+	display "<h2>${progname} error: $*</h2>"
+	display "<br clear=all>"
+	display "<table border=8><tr><td>"
+	display "<pre>`cat < $errfile`</pre><br>"
+	display "</td></tr></table>"
+	display "</center>"
+	printpageftr
+}
+
+dispnotfound()
+{
+	openpage
+	display "<br clear=all><hr>"
+	display "<dl>"
+	display "<h2>No entries were found</h2>"
+	display "<font size=4>"
+	display "<dd>
+Make sure you're using only the listed keywords.  Take a look at
+some of the <a href=\"${examples_page}\">examples</a> if you need
+help in forming search expressions.
+"
+	display "</font>"
+	display "</dl>"
+	closepage
+}
+
+logentry()
+{
+	echo "`date` ${REMOTE_HOST}/${REMOTE_ADDR}: $*" >> $logfile
+}
+
+createlist()
+{
+	case "$stype" in
+		r)	sopt="-O" ;;
+		*)	sopt="-o" ;;
+	esac
+	case "$sortexpr" in
+		"")	sexp="_n" ;;
+		*)	sexp="$sortexpr" ;;
+	esac
+	clexp="!nodist && (${expr})"
+	if mklist -z -R "$seed" -q $sopt "$sexp" -s "$1" "$clexp" \
+ 		2> $errfile 1> $listfile; then
+		set - `wc $listfile`
+		nentries="$1"
+		export nentries
+		if [ "$nentries" = "0" ]; then
+			dispnotfound
+			cleanupandleave
+			# notreached
+		fi
+	else
+		disperr "R($?); selection=\"$expr\", sort=\"$sexp\""
+		cleanupandleave
+		# notreached
+	fi
+}
+
+cleanupandleave()
+{
+	rm -f $listfile $errfile $finame $ficmts
+	exit $*
+	# notreached
+}
+
+printpagehdr()
+{
+	display "`cat $fileroot/head.hti`"
+	display "<img src=\"images/${1:-martyw.gif}\" alt=\"\" align=right>"
+}
+
+printpageftr()
+{
+	display "<br clear=all><hr>"
+	display "`cat $fileroot/tail.hti`"
+	display_end
+}
+
+openpage()
+{
+	printpagehdr
+	display "<dl>"
+	display "<h1>MIDI Search Results</h1>"
+	display "<dd>"
+	display "<dl>"
+	display "<h2><i>$expr</i></h2>"
+	display "<dd>"
+	display "<h3>(${nentries} entries)</h3>"
+	display "</dl>"
+	display "</dl>"
+}
+
+printpage()
+{
+	display "<br clear=all><hr>"
+	display "
+<center>
+<table width="90%" cellspacing=20>
+<tr>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=z\"><img
+			src=\"images/zip.gif\"
+		></a>
+	</td>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=Z\"><img
+			src=\"images/music.gif\"
+		></a>
+	</td>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=Z0\"><img
+			src=\"images/music.gif\"
+		></a>
+	</td>
+</tr>
+<tr>
+	<td valign=top align=center>
+		<font size=3>Take as ZIPfile</font>
+	</td>
+	<td valign=top align=center>
+		<font size=3>Play using MIDI Zuke Box</font>
+		<br><font size=2><i>(click <a
+			href=\"${webroot}/midi.htm#mzb\">here</a> for info.)</i
+		></font>
+	</td>
+	<td valign=top align=center>
+		<font size=3>
+			Use old MIDI Zuke Box<br>
+			(pre v1.0)
+		</font>
+	</td>
+</tr>
+</table>
+</center>
+"
+	display "<br clear=all><hr>"
+	display "<center><table border=2>"
+	display "<tr>"
+	display "<th>entry</th><th>filesize</th>"
+	case "$rtype" in
+		"hk")	display "<th>keywords</th>"	;;
+		*)	display "<th>name</th>"		;;
+	esac
+	display "</tr>"
+	cat $listfile
+	display "</table></center>"
+	display "<br clear=all><hr><br clear=all>"
+	display "<h1>Search Again</h1>"
+	display "`cat $fileroot/midifrm.hti`"
+}
+
+closepage()
+{
+	printpageftr
+}
+
+case "$#" in
+6)	;;
+*)	disperr "Improper call to MIDI Catalog search engine"
+	cleanupandleave
+	# notreached
+	;;
+esac
+
+logentry "expr(${rtype})=\"${expr}\" sort(${stype})=\"${sortexpr}\""
+
+case "$rtype" in
+z|Z|Z0)	createlist "%@%
+%name%"
+	${bindir}/spl2 < $listfile 1> $finame 2> $ficmts
+	rm -f $listfile
+	if mhlzip "$expr" "$rtype" "$expr" "$finame" "$ficmts"	\
+		2> $errfile; then
+	:
+	else
+		disperr "R($?); from mhlzip"
+	fi
+	;;
+*)	sstr="<td><a href=\"$webroot/music/midi/songs/%=@%\">%@%</a></td>"
+	sstr="${sstr}<td>%filesize%</td>"
+	case "$rtype" in
+		"hk")	sstr="${sstr}<td>%*%</td>"	;;
+		*)	sstr="${sstr}<td>%name%</td>"	;;
+	esac
+	createlist "<tr>${sstr}</tr>"
+	openpage
+	printpage
+	closepage
+	;;
+esac
+
+cleanupandleave
+# notreached
+
+# end of mhlscr

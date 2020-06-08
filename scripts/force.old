@@ -1,0 +1,101 @@
+
+prog=`basename $0`
+tfile=/tmp/${prog}.list
+argtype="<userid>"
+kcmd="kill"
+karg="-15"
+
+syntax()
+{
+	cat 1>& 2 << \!
+
+	force: 	"force" processes to terminate by sending kill signal
+
+	syntax:
+	  (1)	force [-s #] <userid>
+	  (2)	force [-s #] -p <ps_id>
+
+	Invocation (1) forces all processes belonging to <userid>
+	Invocation (2) forces all processes with "ps -ef" string <ps_id>
+
+	Using the option <-s #>, it is possible to send signal #, rather
+	than the terminate signal (15) to the process(es).  See kill(1)
+
+	The program is interactive; the list of processes that are found
+	is put into a file and the user is allowed to edit the file using
+	vi(1).  The user modifies the file to include only those processes
+	he wants forced.  The user is then given a chance to abort the
+	process, or issue a force for all the processes in the list.
+
+	Of course, the user must have sufficient priveledge to force the
+	specified processes.   The superuser can force any process.
+
+!
+	exit 1
+}
+
+note()
+{
+	echo "${prog}: $*" 1>&2
+}
+
+error()
+{
+	echo "${prog}: $*" 1>&2 
+}
+
+confirm()
+{
+	while true; do
+		note "$*\c"
+		read x
+		case "$x" in
+			y|Y|yes|YES|Yes)	return 0 ;;
+			n|N|no|NO|No)		return 1 ;;
+		esac
+	done
+}
+
+while getopts ps: c; do
+	case "$c" in
+	p)	argtype="<ps_id>" ;;
+	s)	karg="-$OPTARG" ;;
+	*)	error "invalid option: ${c}"
+		exit 1
+		;;
+	esac
+done
+shift `expr ${OPTIND} - 1`
+
+case $# in
+1)	arg=$1 ;;
+*)	syntax ;;
+esac
+
+case "$argtype" in
+	"<userid>")	ps -ef | grep "^ *$arg" > $tfile ;;
+	"<ps_id>")	ps -ef | grep "$arg" > $tfile ;;
+esac
+
+if [ ! -s $tfile ]; then
+	rm $tfile
+	error "no process with ${argtype}=\"$arg\""
+	exit 1
+fi
+
+vi $tfile
+
+more $tfile
+
+if confirm "${prog} these processes? "; then
+	killcmd="${kcmd} ${karg}"
+	awk "{ print \"${killcmd} \" \$2 }" < $tfile | tee /dev/tty | sh
+	rc=$?
+	rm $tfile
+	exit $rc
+else
+	note "nothing done"
+	rm $tfile
+fi
+
+exit 0

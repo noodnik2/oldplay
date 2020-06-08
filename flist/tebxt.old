@@ -1,0 +1,553 @@
+#include	<stdio.h>
+#include	<string.h>
+#include	<stdlib.h>
+#include	<dos.h>
+
+#include	"compiler.h"
+#include	"arcxyb.h"
+
+#include	"twindow.h"
+#include	"twfe.h"
+#include	"keys.h"
+
+/*
+	keyboard signal handler prologue...
+*/
+typedef struct {
+	void (far *oldbrkfnptr)() ;
+} qkbd_t ;
+
+typedef void (*qkbdbr_t)() ;
+
+static void qkbd_init(), qkbd_fini() ;
+static void qkbd_setbrk(), qkbd_getbrk() ;
+
+static int intsigno ;
+
+static void qtfd_sigint() { intsigno= 2 ; } 		/* simulate SIGINT */
+static qkbd_t qks0 ;
+
+#define	IS_INTSIG()	(intsigno!=0)
+#define	RESET_INTSIG() qkbd_fini(&qks0) ;
+#define	CLEAR_INTSIG() intsigno= 0
+#define	SET_INTSIG() \
+	intsigno= 0 ;\
+	qkbd_init(&qks0) ;\
+	qkbd_setbrk(qtfd_sigint)
+
+/*
+	tebxt #defines
+*/
+
+#define		ACCEPT 		'\r'
+
+#define		EWIN_C 		0
+#define		EWIN_R 		6	/* was 20 */
+#define		EWIN_H 		5
+#define		EWIN_L 		80
+
+#define		PWIN_C 		0
+#define		PWIN_R 		11	/* was 10 */
+#define		PWIN_H 		4
+#define		PWIN_L 		80
+
+#define		FILE_MAX_LRECL	1024
+
+#define		LCL_FNSIZE	78
+#define		RMT_FNSIZE	78
+
+static char str_startrecv[]= "$%&arcXYbSTART" ;
+static char str_endrecv[]= "@#!arcXYbEND" ;
+
+#define		STR_STARTRECV	str_startrecv
+#define		STR_ENDRECV	str_endrecv
+
+struct xt_parm {
+	ARCXYB_T *xtp ;
+	int xmode ;
+	int rc ;
+	char lclfn[LCL_FNSIZE+1] ;
+	char rmtfn[LCL_FNSIZE+1] ;
+	WINDOW *mw, *ew, *pw ;
+	int (*sendfix)() ;
+	int (*recvfix)() ;
+	int row0, col0 ;
+} ;	
+
+static struct xt_parm *tp_p ;
+#define	RC	(tp_p->rc)
+#define	XTP	(tp_p->xtp)
+#define	LCLFN	(tp_p->lclfn)
+#define	RMTFN	(tp_p->rmtfn)
+#define	M_WIN	(tp_p->mw)
+#define	E_WIN	(tp_p->ew)
+#define	P_WIN	(tp_p->pw)
+#define	SFIX	(tp_p->sendfix)
+#define	RFIX	(tp_p->recvfix)
+#define	ROW0	(tp_p->row0)
+#define	COL0	(tp_p->row0)
+
+static void setup() ;
+static void doxfer() ;
+static void takedown() ;
+static void emsg() ;
+static WINDOW *paint_menu() ;
+static int uxsfix() ;
+static int uxrfix() ;
+
+int telnetxfer(xtp)
+register ARCXYB_T *xtp ;
+{
+	struct xt_parm tp ;
+
+	setup(&tp, xtp) ;
+	doxfer() ;
+	takedown() ;
+	return(RC) ;
+}
+
+static void setup(tpp, xtp)
+struct xt_parm *tpp ;
+register ARCXYB_T *xtp ;
+{
+	tp_p= tpp ;
+	RC= 0 ;
+	XTP= xtp ;
+	SFIX= uxsfix ;
+	RFIX= uxrfix ;
+	curr_cursor(&COL0, &ROW0) ;
+	SET_INTSIG() ;
+}
+
+static void takedown()
+{
+	if (RC == 0) flushinp() ;
+	RESET_INTSIG() ;
+	cursor(COL0, ROW0) ;
+}
+
+char main_menu[]= "\
+ Set (T)ransfer type \n\
+ Set (O)p-system type \n\
+ (S)end file \n\
+ (R)eceive file \
+" ;
+
+static void doxfer()
+{
+	int s ;
+
+	if (setup_wins()) return ;
+
+	set_help("opmenu       ", 1, 1) ;
+	s= 1 ;
+	
+	strcpy(LCLFN, "pcfile") ;
+	strcpy(RMTFN, "rmtfile") ;
+
+	while(1) {
+		cursor(0, 25) ;
+		if ((s= get_selection(M_WIN, s, "TOSR")) == 0) break ;
+		accent(M_WIN) ;
+		switch(s) {
+			case	1:
+				emsg("Transfer Type not implemented") ;
+				break ;
+			case	2:
+				emsg("Only UNIX supported presently") ;
+				break ;
+			case	3:
+				set_title(P_WIN, " Send ") ;
+				display_window(P_WIN) ;
+				if (!getfns()) {
+					clear_window(E_WIN) ;
+					wcursor(E_WIN, 0, 0) ;
+					wprintf(E_WIN, "Sending: %s", LCLFN) ;
+					dosend() ;
+				}
+				hide_window(P_WIN) ;
+				break ;
+			case	4:
+				set_title(P_WIN, " Receive ") ;
+				display_window(P_WIN) ;
+				if (!getfns()) {
+					clear_window(E_WIN) ;
+					wcursor(E_WIN, 0, 0) ;
+					wprintf(E_WIN, "Receiving: %s", LCLFN) ;
+					dorecv() ;
+				}
+				hide_window(P_WIN) ;
+				break ;
+		}
+		deaccent(M_WIN) ;
+	}
+	close_all() ;
+}
+
+static int getpfld(row, len, str, prompt)
+int row, len ;
+char *str, *prompt ;
+{
+	twfe_parms tp ;
+	int col ;
+
+	col= 0 ;
+	wcursor(P_WIN, col, row) ;
+
+	while(*prompt) {
+		wputchar(P_WIN, *prompt++) ;
+		col++ ;
+	}
+
+	tp.w= P_WIN ;
+	tp.row= row ;
+	tp.col= col ;
+	tp.len= len ;
+	tp.string= str ;
+	tp.buffer= (char *)NULL ;
+
+	return(twfe(&tp, WFT_REGULAR)) ;
+}
+
+static int getfns()
+{
+	int rkey, *sel ;
+	char dlist[10240], *l ;
+
+	do {
+		do {
+			rkey= getpfld(0, LCL_FNSIZE, LCLFN, "Local File:  ") ;
+			if (rkey == ESC) return(1) ;
+			if (rkey == F8) {
+				dosdir_list("*.*", dlist, sizeof(dlist)) ;
+				l= dlist ;
+				sel= 0 ;
+				listsel("Local", dlist, &l, &sel, LCLFN) ;
+			}
+		} while((rkey != ACCEPT) && (rkey != DN)) ;
+		do {
+			rkey= getpfld(1, RMT_FNSIZE, RMTFN, "Remote File: ") ;
+			if (rkey == ESC) break ;
+		} while((rkey != ACCEPT) && (rkey != UP)) ;
+	} while(rkey != ACCEPT) ;
+	if (RMTFN[0] == '\0' || LCLFN[0] == '\0') return(1) ;
+	return(0) ;
+}
+
+static int dosend()
+{
+	FILE *lfp ;
+	int rc ;
+
+	if ((lfp= fopen(LCLFN, "r")) == (FILE *)NULL) {
+		wprintf(E_WIN, "\nCan't open: %s", LCLFN) ;
+		return(1) ;
+	}
+	rc= sendfile(lfp) ;
+	fclose(lfp) ;
+	return(rc) ;
+}
+
+static int dorecv()
+{
+	FILE *lfp ;
+	int rc ;
+
+	if ((lfp= fopen(LCLFN, "w")) == (FILE *)NULL) {
+		wprintf(E_WIN, "\nCan't create: %s", LCLFN) ;
+		return(1) ;
+	}
+	rc= recvfile(lfp) ;
+	fclose(lfp) ;
+	return(rc) ;
+}
+
+static int uxsfix(eflag)
+int eflag ;
+{
+	char filerec[FILE_MAX_LRECL+2] ;
+
+	if (eflag) {
+		if (sendrec("\004", 1)) return(1) ;
+	}
+	else {
+		sprintf(filerec, "cat > %s\n", RMTFN) ;
+		if (sendrec(filerec, strlen(filerec))) return(1) ;
+	}
+	return(0) ;
+}
+
+static int uxrfix(eflag)
+int eflag ;
+{
+	char filerec[FILE_MAX_LRECL+2] ;
+
+	if (!eflag) {
+		sprintf(
+			filerec,
+			"(echo \"%s\"; cat %s; echo \"%s\")\n",
+			STR_STARTRECV,
+			RMTFN,
+			STR_ENDRECV
+		) ;
+		if (sendrec(filerec, strlen(filerec))) return(1) ;
+	}
+	return(0) ;
+}
+
+static int sendfile(lfp)	
+FILE *lfp ;
+{
+	long nrecs ;
+	char filerec[FILE_MAX_LRECL+2] ;
+	int l ;
+	
+	if (SFIX(0)) return(1) ;
+
+	wprintf(E_WIN, "\n") ;
+
+	nrecs= 0L ;
+	while(fgets(filerec, sizeof(filerec)-1, lfp) != (char *)NULL) {
+		l= strlen(filerec) ;
+		if (filerec[l-1] != '\n') {
+			filerec[l]= '\n' ;
+			l++ ;
+		}
+		wprintf(E_WIN, "%ld\r", nrecs + 1L) ;
+		if (aborted()) break ;
+		if (sendrec(filerec, l)) return(1) ;
+		flushinp() ;
+		nrecs++ ;
+	}
+
+	if (SFIX(1)) return(1) ;
+
+	wprintf(E_WIN, "%ld records sent", nrecs) ;
+	return(0) ;
+}
+
+static int recvfile(lfp)
+FILE *lfp ;
+{
+	long nrecs ;
+	char filerec[FILE_MAX_LRECL+2] ;
+	int l, ab ;
+	
+	if (RFIX(0)) return(1) ;
+
+	ab= 0 ;
+	wprintf(E_WIN, "\n") ;
+	nrecs= 0L ;
+
+	l= strlen(STR_STARTRECV) ;
+	do {
+		if (recvrec(filerec, sizeof(filerec)) != 0) return(1) ;
+		if (aborted()) {
+			ab= 1 ;
+			break ;
+		}
+	} while(memcmp(filerec, STR_STARTRECV, l) != 0) ;
+
+	if (!ab) {
+		l= strlen(STR_ENDRECV) ;
+		while(1) {
+			wprintf(E_WIN, "%ld\r", nrecs + 1L) ;
+			if (recvrec(filerec, sizeof(filerec)) != 0) return(1) ;
+			if (aborted()) break ;
+			if (memcmp(filerec, STR_ENDRECV, l) == 0) break ;
+			fputs(filerec, lfp) ;
+			fputs("\n", lfp) ;
+			nrecs++ ;
+		}
+	}
+
+	if (RFIX(1)) return(1) ;
+
+	wprintf(E_WIN, "%ld records received", nrecs) ;
+	return(0) ;
+}
+
+static int aborted()
+{
+	if (IS_INTSIG()) {
+		wprintf(E_WIN, "-- Aborted --\n") ;
+		CLEAR_INTSIG() ;
+		return(1) ;
+	}
+	return(0) ;
+}
+
+static int sendrec(rec, len)
+char *rec ;
+int len ;
+{
+	char *p ;
+	int l ;
+
+	for (p= rec; len> 0; p+= l) {
+		if (IS_INTSIG()) break ;
+		if ((l= arcxyb_write(XTP, p, len))< 0) {
+			wprintf(E_WIN, "\nWrite failed! (rc=%d)", l) ;
+			break ;
+		}
+		len-= l ;
+	}
+
+	return(len != 0) ;
+}
+
+static int recvrec(rec, len)
+char *rec ;
+int len ;
+{
+	int i, c ;
+
+	for (i= 0; i< len;) {
+		if (IS_INTSIG()) break ;
+		if ((c= arcxyb_getch(XTP))< 0) return(1) ;
+		if (c == '\r') continue ;
+		if (c == '\n') break ;
+		rec[i++]= (char) c ;
+	}
+	rec[i]= '\0' ;
+	return(0) ;
+}
+
+static int flushinp()
+{
+	arcxyb_cmd(XTP, XYBC_FLUSH_INPUT) ;
+}
+
+static int setup_wins()
+{
+	load_help("tebxt.hlp") ;
+
+	M_WIN= paint_menu(0, 0, " Select or ESC ", main_menu) ;
+	E_WIN= establish_window(EWIN_C, EWIN_R, EWIN_H, EWIN_L) ;
+	P_WIN= establish_window(PWIN_C, PWIN_R, PWIN_H, PWIN_L) ;
+
+	if (	(M_WIN == (WINDOW *)NULL)
+	     || (E_WIN == (WINDOW *)NULL)
+	     || (P_WIN == (WINDOW *)NULL)
+	) {
+		fprintf(stderr, "window malloc failure\n") ;
+		return(99) ;
+	}
+
+	set_colors(E_WIN, ALL, BLUE, GREEN, DIM) ;
+	set_colors(P_WIN, ALL, BLUE, WHITE, BRIGHT) ;
+
+	display_window(M_WIN) ;
+	display_window(E_WIN) ;
+
+	return(0) ;
+}
+
+static WINDOW *paint_menu(x, y, title, contents)
+int x, y ; 
+char *title, *contents ;
+{
+	WINDOW *w ;
+	char **cp ;
+
+	w= establish_window(x, y, ht(contents), wd(contents)) ;
+	set_title(w, title) ;
+	set_colors(w, ALL, BLUE, GREEN, BRIGHT) ;
+	set_colors(w, ACCENT, GREEN, WHITE, BRIGHT) ;
+	while(*contents) wputchar(w, *contents++) ;
+	return(w) ;
+}
+
+static int ht(char *tb)
+{
+	int h ;
+
+	for (h= 0; *tb != '\0'; tb++) {
+		if (*tb == '\n') h++ ;
+	}
+	return(h + 3) ;
+}
+
+static int wd(char *tb)
+{
+	int w, w0 ;
+
+	for (w= w0= 0; *tb != '\0'; tb++) {
+		if (*tb == '\n') {
+			w= max(w, w0) ;
+			w0= 0 ;
+		}
+		else w0++ ;
+	}
+	return(w + 4) ;
+}
+
+static void emsg(msg)
+char *msg ;
+{
+	wprintf(E_WIN, "\n%s", msg) ;
+}
+
+/*
+	start of keyboard signal handler
+*/
+
+static void far interrupt break_handler() ;
+
+static qkbdbr_t lclbrkrtn= (qkbdbr_t)NULL ;
+
+static void qkbd_init(kbp)
+qkbd_t *kbp ;
+{
+	union REGS regs ;
+	struct SREGS sregs ;
+	void (far interrupt *brkfnptr)() ;
+
+	memset((char *)kbp, '\0', sizeof(qkbd_t)) ;
+
+	regs.x.ax= 0x351B ;
+	intdosx(&regs, &regs, &sregs) ;
+	FP_SEG(kbp->oldbrkfnptr)= sregs.es ;
+	FP_OFF(kbp->oldbrkfnptr)= regs.x.bx ;
+
+	brkfnptr= break_handler ;
+	regs.x.ax= 0x251B ;
+	regs.x.dx= FP_OFF(brkfnptr) ;
+	sregs.ds= FP_SEG(brkfnptr) ;
+
+	intdosx(&regs, &regs, &sregs) ;
+}
+
+static void qkbd_fini(kbp)
+qkbd_t *kbp ;
+{
+	union REGS regs ;
+	struct SREGS sregs ;
+
+	regs.x.ax= 0x251B ;
+	regs.x.dx= FP_OFF(kbp->oldbrkfnptr) ;
+	sregs.ds= FP_SEG(kbp->oldbrkfnptr) ;
+
+	intdosx(&regs, &regs, &sregs) ;
+}
+
+void qkbd_setbrk(newlclbr)
+qkbdbr_t newlclbr ;
+{
+	lclbrkrtn= newlclbr ;
+}
+
+#if 0
+void qkbd_getbrk(lclbrp)
+qkbdbr_t *lclbrp ;
+{
+	(*lclbrp)= lclbrkrtn ;
+}
+#endif
+
+static void far interrupt break_handler()
+{
+	if (lclbrkrtn != (qkbdbr_t)NULL) {
+		lclbrkrtn() ;
+	}
+}

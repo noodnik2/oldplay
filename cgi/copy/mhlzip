@@ -1,0 +1,119 @@
+#! /bin/sh
+#
+#	mhlzip title rtype desc fn.names fn.comments
+#
+#
+
+file_root="${PATH_TRANSLATED}"
+
+tmpdir="/usr/local/tmp"
+errfile="${tmpdir}/txz$$"
+zipfile="${tmpdir}/`date +%M%d%H%M%S`.zip"
+title="$1"
+rtype="$2"
+zipdesc="$3"
+finame="$4"
+ficmts="$5"
+
+#status="201"
+status="200 OK"
+ziplength=""
+
+songdir="music/midi/songs"
+
+case "$rtype" in
+Z|Z0)	ziptype="zipmzb"
+	zipname=""
+	;;
+*)	ziptype="zip"
+	zipname="mysel.zip"
+	;;
+esac
+
+case "$rtype" in
+Z0)	zipopts="-k -0"
+	;;
+*)	zipopts="-k"
+	;;
+esac
+
+ecnl()
+{
+#	echo -n "$*\r\n"
+	echo "$*"
+}
+
+http_prolog()
+{
+	ecnl "${SERVER_PROTOCOL} ${status}"
+	ecnl "Server: ${SERVER_SOFTWARE}"
+	ecnl "Content-type: application/x-${ziptype}-compressed"
+	if [ "${zipname}" != "" ]; then
+		ecnl "Content-disposition: inline; filename=${zipname}"
+	fi
+	ecnl "Content-length: ${ziplength}"
+	ecnl ""
+}
+
+#
+#	This function was written because the zipfile was not being
+#	deleted when the browser "canceled" the ZIPfile transfer.
+#	The "sleep 2" is done to allow enough time for "cat" to
+#	open the file...  Other files that should be erased were
+#	also added...
+#
+removezipinode()
+{
+	sleep 2
+	rm -f $zipfile $finame $ficmts > /dev/null 2>&1
+}
+
+outputzip()
+{
+	chmod a+r $zipfile > /dev/null 2>&1
+	set - `wc -c $zipfile`
+	ziplength="$1"
+	http_prolog
+	removezipinode &
+	cat $zipfile
+	rm -f $zipfile > /dev/null 2>&1
+	sleep 2
+}
+
+mkzip()
+{
+	> $errfile
+	(	
+		if cd ${file_root}/${songdir} > ${errfile}; then
+			echo "${zipdesc}" >> ${ficmts}
+			if zip ${zipopts} -z -c ${zipfile} `cat ${finame}` \
+				< ${ficmts} > ${errfile} 2>&1; then
+				outputzip
+			else
+				return
+			fi
+		else
+			return
+		fi
+	)
+}
+
+cleanupandleave()
+{
+	rm -r $errfile
+	exit $*
+	# notreached
+}
+
+mkzip
+rc="$?"
+
+if [ "$rc" = 0 ]; then
+	cleanupandleave
+	# notreached
+fi
+
+cat $errfile 1>& 2
+cleanupandleave $rc
+
+# end of mhlzip

@@ -1,0 +1,41 @@
+
+1.)	directory traversal:
+
+		use "opendir(3)", "readdir(3)", and "closedir(3)".
+		see page 117 from "Beginning Linux Programming".
+
+
+2.)	find free space on disk, in bytes:
+
+		use "open(2)", "fstat(2)", "fstatfs(2)",
+		and "close(2)" to calculate.
+
+
+3.)	set time/date on file:
+	modify "modified" time (in Unix, there are three
+	dates associated with a file: last access, last modify,
+	and creation).
+
+		use "utime(2)" to change "modtime".
+
+
+4.)	Return current position in file.
+
+		use "ftell(2)".
+
+
+5.)	Get system date/time.
+
+		use "gettimeofday(2)".
+
+
+6.)	Set system date/time.
+
+		use "settimeofday(2)".  read warnings.
+
+
+7.)	Execute command.
+
+		use: "system(3)" call.
+
+

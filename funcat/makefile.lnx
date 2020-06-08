@@ -1,0 +1,32 @@
+#	Revision:	1
+#
+
+#
+#	Linux makefile for FUNCAT
+#	Copyright (C) 1993, Contahal Ltd.
+#
+
+FUNCAT_OBJ=fcmain.o fcproc.o fcmsgs.o fcprint.o fcsyntax.o \
+	   clgetopt.o
+
+funcat:	$(FUNCAT_OBJ)
+	cc -o funcat $(FUNCAT_OBJ)
+
+clean:
+	rm -f funcat *.o core *.err compiler.h
+
+compiler.h:	compiler.lnx
+	cp compiler.lnx compiler.h
+
+fcmain.o:	fc.h compiler.h clgetopt.h
+
+fcproc.o:	fc.h compiler.h
+
+fcmsgs.o:	fc.h compiler.h clgetopt.h
+
+fcprint.o:	fc.h compiler.h
+
+fcsyntax.o:	compiler.h
+
+clgetopt.o:	compiler.h clgetopt.h
+

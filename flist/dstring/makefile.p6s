@@ -1,0 +1,58 @@
+
+#
+#	Makefile for FLMAC utility for FLIST: PC-DOS Microsoft C 6 Compiler
+#	Copyright (C) 1992, Contahal Ltd.
+#
+
+FLMAC_EXE= flmac.exe
+FLPRG_DAT= flmac.dat
+
+MODEL=S
+
+INSTDIR=$(HD)\marty\bin
+
+INCLUDE=$(INCLUDE)
+LFLAGS= /stack:20480
+CFLAGS= /A$(MODEL) /Zp /Zl /nologo
+CD= $(HD)\C6
+# CC= $(CD)\bin\cl
+CC=cl
+CLIBS=$(CD)\lib\$(MODEL)libce.lib
+
+.c.obj:
+	@$(CC) /c $(CFLAGS) $*.c
+
+FLMAC_OBJ= \
+	mkdstr.obj \
+	cescstr.obj \
+	gettok.obj \
+	bswap.obj \
+	dsparse.obj
+
+$(FLMAC_EXE):	$(FLMAC_OBJ)
+		link $(LFLAGS) $(FLMAC_OBJ), $@,,$(CLIBS) ;
+
+clean:	clean.dat
+	FOR %%X IN (*.obj *.map *.exe *.lib *.bak *.log) DO erase %%X
+
+clean.dat:
+	FOR %%X IN (*.dat) DO erase %%X
+
+#
+#	C-object file dependencies
+#
+
+BSWAP.OBJ:	..\compiler.h 
+
+CESCSTR.OBJ:	..\compiler.h ..\flist.h 
+
+DSPARSE.OBJ:	..\compiler.h ..\flist.h 
+
+GETTOK.OBJ:	..\compiler.h 
+
+MKDSTR.OBJ:	..\compiler.h mkdstr.h 
+
+RDDSTR.OBJ:	..\compiler.h rddstr.h 
+
+TESTRD.OBJ:	..\compiler.h 
+

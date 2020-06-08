@@ -1,0 +1,16 @@
+
+cc \
+clgetopt.o \
+cescstr.o \
+sparse.o \
+flist.o \
+doflist.o \
+setscn.o \
+procscn.o \
+scn.o \
+list.o \
+statfile.o \
+macro.o \
+syntax.o \
+-lcurses -ltermlib -o flist.sun
+

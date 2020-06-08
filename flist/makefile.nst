@@ -1,0 +1,142 @@
+
+#
+#	Makefile for flist for NST-3000
+#	Copyright (C) 1992, Contahal Ltd.
+#
+
+SHELL= /bin/sh
+# DESTDIR= ${HOME}/bin
+DESTDIR= /usr/local/bin
+# DGRP=usr
+DGRP=bin
+
+HELP= flist.man1
+PROG= flist
+FLPRG= flistmc
+FLMAC= flmac.prog
+FLDAT= flmac.data
+
+CFLAGS= -O
+
+.c.o:
+	cc -c ${CFLAGS} $*.c
+	- mv -f $(@F) $(@D)
+
+FLMAC_OBJ= \
+dstring/mkdstr.o \
+dstring/cescstr.o \
+dstring/gettok.o \
+dstring/bswap.o \
+dstring/dsparse.o
+
+PROG_OBJ= \
+clgetopt.o \
+srchfile.o \
+cescstr.o \
+sparse.o \
+flist.o \
+doflist.o \
+getcmd.o \
+setscn.o \
+procscn.o \
+scn.o \
+list.o \
+statfile.o \
+sortby.o \
+rddstr.o \
+bswap.o \
+macro.o \
+syntax.o \
+scnq.o \
+dirlist.o \
+rddir.o \
+docmd.o
+
+${PROG}: ${PROG_OBJ}
+	cc -o ${PROG} ${CFLAGS} ${PROG_OBJ} -lcurses
+	@echo $@: created
+
+${FLPRG}: ${FLMAC}
+
+${FLMAC}: ${FLMAC_OBJ}
+	 cc -o ${FLMAC} ${CFLAGS} ${FLMAC_OBJ} 
+	 @echo $@: created
+	
+install.${PROG}: ${PROG}
+	cp ${PROG} ${DESTDIR}
+	strip ${DESTDIR}/${PROG}
+	chmod 775 ${DESTDIR}/${PROG}
+	chgrp ${DGRP} ${DESTDIR}/${PROG}
+	@echo $@: ${DESTDIR}/${PROG}
+
+install.${FLPRG}: ${FLPRG}
+	cp ${FLDAT} ${DESTDIR}/${FLDAT}
+	chmod ug=rw,o=r ${DESTDIR}/${FLDAT}
+	chgrp ${DGRP} ${DESTDIR}/${FLDAT}
+	@echo $@: ${DESTDIR}/${FLDAT}
+	cp ${FLPRG} ${DESTDIR}
+	chmod 775 ${DESTDIR}/${FLPRG}
+	chgrp ${DGRP} ${DESTDIR}/${FLPRG}
+	@echo $@: ${DESTDIR}/${FLPRG}
+	cp ${FLMAC} ${DESTDIR}
+	strip ${DESTDIR}/${FLMAC}
+	chmod 775 ${DESTDIR}/${FLMAC}
+	chgrp ${DGRP} ${DESTDIR}/${FLMAC}
+	@echo $@: ${DESTDIR}/${FLMAC}
+
+install.${HELP}: ${HELP}
+	cp ${HELP} ${DESTDIR}/${HELP}
+	chmod ug=rw,o=r ${DESTDIR}/${HELP}
+	chgrp ${DGRP} ${DESTDIR}/${HELP}
+	@echo $@: ${DESTDIR}/${HELP}
+
+install: install.${PROG} install.${FLPRG} install.${HELP}
+	
+clean:
+	rm -f *.o core ${PROG} ${FLMAC}
+	@echo $@: ${PROG}, ${FLMAC}
+
+compiler.h:	compiler.nst
+	cp compiler.nst compiler.h
+
+bswap.o:	compiler.h 
+
+cescstr.o:	compiler.h flist.h 
+
+clgetopt.o:	compiler.h clgetopt.h 
+
+srchfile.o:	compiler.h srchfile.h
+
+docmd.o:	compiler.h flist.h 
+
+doflist.o:	compiler.h flist.h 
+
+flist.o:	compiler.h clgetopt.h flist.h 
+
+getcmd.o:	compiler.h flist.h 
+
+list.o:		compiler.h flist.h rddir.h 
+
+macro.o:	compiler.h flist.h 
+
+procscn.o:	compiler.h flist.h 
+
+rddir.o:	compiler.h rddir.h 
+
+rddstr.o:	compiler.h rddstr.h 
+
+scn.o:		compiler.h flist.h 
+
+scnq.o:		compiler.h flist.h 
+
+setscn.o:	compiler.h flist.h 
+
+sortby.o:	compiler.h flist.h 
+
+sparse.o:	compiler.h flist.h 
+
+statfile.o:	compiler.h flist.h 
+
+syntax.o:	compiler.h flist.h srchfile.h
+
+dirlist.o:	compiler.h rddir.h dirlist.h

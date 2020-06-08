@@ -1,0 +1,411 @@
+#! /bin/sh
+#
+#	midiscr query expr sortexpr rtype stype seed
+#
+
+diflag="no"
+progname="`basename $0`"
+#webroot="http://www.pos.co.il/~marty"
+hostname=`hostname`
+webroot="http://${hostname}/~marty"
+fileroot="${PATH_TRANSLATED}"
+bindir="${fileroot}/cgi-bin"
+
+tmpdir="/usr/local/tmp"
+errfile="${tmpdir}/${progname}e.$$"
+listfile="${tmpdir}/${progname}l.$$"
+finame="${tmpdir}/${progname}n.$$"
+ficmts="${tmpdir}/${progname}c.$$"
+
+logfile="${fileroot}/logs/midiuser.log"
+examples_page="${webroot}/midi.htm#examples"
+exprhelp_page="${webroot}/midi.htm#exprhelp"
+
+nargs="$#"
+query="$1"
+expr="$2"
+sortexpr="$3"
+rtype="$4"
+stype="$5"
+seed="$6"
+
+set - `date -u +"%H %w %M"`
+thr="$1"
+tdy="$2"
+tmn="$3"
+rhr0=6
+rhr1=18
+zipok="yes"
+
+#following lines deleted - always ok now
+#if [ $thr -ge $rhr0 -a $thr -lt $rhr1 -a $tdy -lt 5 ]; then
+#	zipok="no"
+#fi
+
+ecnl()
+{
+#	echo -n "$*\r\n"
+	echo "$*"
+}
+
+http_prolog()
+{
+	ecnl "${SERVER_PROTOCOL} 200"
+	ecnl "Server: ${SERVER_SOFTWARE}"
+	ecnl "Content-type: $1"
+	if [ "$2" != "" ]; then
+		ecnl "Content-disposition: inline; filename=$2"
+	fi
+	ecnl ""
+}
+
+display()
+{
+	if [ "$diflag" = "no" ]; then
+		diflag="yes"
+		http_prolog "text/html"
+		echo "<html>"
+		echo "<head>"
+		echo "   <title>Marty's MIDI Catalog - Search Results</title>"
+		echo "   <base href=\"$webroot/midi.htm\">"
+	#	echo "   <base href=\"$webroot/midiscr\">"
+		echo "</head>"
+	fi
+	echo "$*"
+}
+
+display_end()
+{
+	echo "</body>"
+	echo "</html>"
+}
+
+notnowerr()
+{
+	logentry "refused: during business hours"
+	printpagehdr
+	display "
+<h1>Request was Denied</h1>
+<h2>The time is ${thr}:${tmn} GMT</h2>
+<br clear=all>
+<hr>
+<dl>
+<h2><i>Please try again during non-business hours</i></h2>
+<font size=4>
+<dd>
+<p>
+	Due to the increased load this service places on our Internet
+	Gateway, I have been forced to restrict the service during
+	business hours.
+</p>
+<p>
+	During business hours (${rhr0}:00 until ${rhr1}:00 GMT, Sunday
+	through Thursday), it will no longer be possible to download
+	MIDI song archives (which are typically a megabyte or more in
+	size).  However, individual MIDI song files will continue to
+	be offered.
+</p>
+<p>
+	This policy will be in effect until further notice.
+</p>
+<p>
+	<img src="images/mysig.gif" alt="-- Marty">
+</p>
+"
+	printpageftr
+	cleanupandleave
+	# notreached
+}
+
+disperr()
+{
+	logentry "error: $*: `cat ${errfile} 2>/dev/null`"
+	printpagehdr "greenguy.gif"
+	display "
+<h1><i><blink>Oh no!</blink></i></h1>
+<br clear=all>
+<hr>
+<dl>
+<h2>An error occurred</h2>
+<font size=4>
+<dd>
+<p>
+	There was an error processing your request.  The details
+	of the error appear in the section below.
+</p>
+<p>
+	Most likely, the problem is that your
+	<a href=\"${exprhelp_page}\">search expression</a>, or your
+	<a href=\"${exprhelp_page}\">sort expression</a>, was formed
+	incorrectly.  Please check out the
+	<a href=\"${examples_page}\">examples</a> page if all of this
+	jargon about \"expressions\" is getting you down.
+</p>
+<p>
+	If you think you're doing everything right, and you're still
+	getting an error, you can cut and paste the contents of the
+	error detail section below into an e-mail message to me and
+	I'll check it out.  Thanks.
+</p>
+"
+	display "</font></dl>"
+	display "<br clear=all>"
+	display "<hr>"
+	display "<br clear=all>"
+	display "<center>"
+	display "<h2>${progname} error: $*</h2>"
+	display "<br clear=all>"
+	display "<table border=8><tr><td>"
+	display "<pre>`cat < ${errfile} 2>/dev/null`</pre><br>"
+	display "</td></tr></table>"
+	display "</center>"
+	printpageftr
+}
+
+dispnotfound()
+{
+	openpage
+	display "<br clear=all><hr>"
+	display "<dl>"
+	display "<h2>No entries were found</h2>"
+	display "<font size=4>"
+	display "<dd>
+Make sure you're using only the listed keywords.  Take a look at
+some of the <a href=\"${examples_page}\">examples</a> if you need
+help in forming search expressions.
+"
+	display "</font>"
+	display "</dl>"
+	closepage
+}
+
+logentry()
+{
+	echo "`date` ${REMOTE_HOST}/${REMOTE_ADDR}: $*" >> $logfile
+}
+
+createlist()
+{
+	clexp="!nodist && (${expr})"
+	case "$stype" in
+		r)	clsopt="-O" ;;
+		*)	clsopt="-o" ;;
+	esac
+	case "$sortexpr" in
+		"")	clsexp="${expr}"
+			clsopt="-O"
+			;;
+		*)	clsexp="$sortexpr" ;;
+	esac
+	if mklist -z -R "$seed" -q $clsopt "$clsexp" -s "$1" "$clexp" \
+ 		2> ${errfile} 1> ${listfile}; then
+		set - `wc ${listfile}`
+		nentries="$1"
+		export nentries
+		if [ "$nentries" = "0" ]; then
+			dispnotfound
+			cleanupandleave
+			# notreached
+		fi
+	else
+		disperr "R($?); selection=\"$expr\", sort=\"$clsexp\""
+		cleanupandleave
+		# notreached
+	fi
+}
+
+cleanupandleave()
+{
+	rm -f $listfile $errfile $finame $ficmts
+	exit $*
+	# notreached
+}
+
+printpagehdr()
+{
+	display "`cat $fileroot/head.hti`"
+	display "<img src=\"images/${1:-martyw.gif}\" alt=\"\" align=right>"
+}
+
+printpageftr()
+{
+	display "<br clear=all><hr>"
+	display "`cat $fileroot/tail.hti`"
+	display_end
+}
+
+openpage()
+{
+	printpagehdr
+	display "<dl>"
+	display "<h1>MIDI Search Results</h1>"
+	display "<dd>"
+	display "<dl>"
+	display "<h2><i>$expr</i></h2>"
+	display "<dd>"
+	if [ "${nentries}" = "1" ]; then
+		display "<h3>(${nentries} entry)</h3>"
+	else
+		display "<h3>(${nentries} entries)</h3>"
+	fi
+	display "</dl>"
+	display "</dl>"
+}
+
+printpage()
+{
+	display "<br clear=all><hr>"
+	display "
+<center>
+<table width="90%" cellspacing=20>
+"
+	if [ "$zipok" = "no" ]; then
+		display "
+<tr>
+	<td colspan=3><table><tr>
+		<td align=center valign=middle>
+			<img src=\"images/info95.gif\" alt=\"Note:\">
+		</td>
+		<th align=left valign=middle><font size=2><i>
+			The time is ${thr}:${tmn} GMT.  If you call back
+			during non-business hours (${rhr1}:00 until
+			${rhr0}:00 GMT, or all day Friday and Saturday),
+			you can take the following set as a ZIPfile
+			archive using these buttons:
+		</i></font></th>
+	</table></td>
+</tr>
+"
+	else
+		display "
+<tr>
+	<td colspan=3><table><tr>
+		<td align=center valign=middle>
+			<img src=\"images/info95.gif\" alt=\"Note:\">
+		</td>
+		<th align=left valign=middle><font size=2><i>
+			It takes some time to build a song archive.
+			Please allow up to one minute for every 100 songs.
+		</i></font></th>
+	</table></td>
+</tr>
+"
+	fi
+	display "
+<tr>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=z\"><img
+			src=\"images/zip.gif\"
+		></a>
+	</td>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=Z\"><img
+			src=\"images/music.gif\"
+		></a>
+	</td>
+	<td align=center>
+		<a href=\"${webroot}${SCRIPT_NAME}?${query}&rtype=Z0\"><img
+			src=\"images/music.gif\"
+		></a>
+	</td>
+</tr>
+<tr>
+	<td valign=top align=center>
+		<font size=3>Take as ZIPfile</font>
+	</td>
+	<td valign=top align=center>
+		<font size=3>Play using MIDI Zuke Box</font>
+		<br><font size=2><i>(click <a
+			href=\"${webroot}/midi.htm#mzb\">here</a> for info.)</i
+		></font>
+	</td>
+	<td valign=top align=center>
+		<font size=3>
+			Use old MIDI Zuke Box<br>
+			(pre v1.0)
+		</font>
+	</td>
+</tr>
+</table>
+</center>
+<br clear=all><hr>
+"
+	display "<center><table border=2>"
+	display "<tr>"
+	display "<th>entry</th><th>filesize</th>"
+	case "$rtype" in
+		"hk")	display "<th>keywords</th>"	;;
+		*)	display "<th>name</th>"		;;
+	esac
+	display "</tr>"
+	cat $listfile
+	display "</table></center>"
+	display "<br clear=all><hr><br clear=all>"
+	display "<h1>Search Again</h1>"
+	display "`cat $fileroot/midifrm.hti`"
+}
+
+closepage()
+{
+	printpageftr
+}
+
+dozip()
+{
+	# don't forget the linefeed
+	# createlist "%@% %name%"
+	createlist "%@%
+%*%"
+	${bindir}/spl2 < $listfile 1> $finame 2> $ficmts
+	rm -f $listfile
+	if mhlzip "$expr" "$rtype" "$expr" "$finame" "$ficmts"	\
+		2> ${errfile}; then
+	:
+	else
+		disperr "R($?); from mhlzip"
+	fi
+}
+
+case "$nargs" in
+6)	;;
+*)	disperr "Improper call to MIDI Catalog search engine"
+	cleanupandleave
+	# notreached
+	;;
+esac
+
+logentry "expr(${rtype})=\"${expr}\" sort(${stype})=\"${sortexpr}\""
+
+case "$rtype" in
+_z|_Z|_Z0) 
+	rtype=`expr "${rtype}" : ".\(.*\)"`
+	logentry "override(${rtype}): during business hours"
+	dozip
+	;;
+z|Z|Z0)	if [ "$zipok" = "no" ]; then
+		notnowerr
+		# notreached
+	fi
+	dozip
+	;;
+pl)	createlist "%@%"
+	http_prolog "application/octet-stream" "mysel.set"
+	cat ${listfile}
+	;;
+*)	sstr="<td><a href=\"$webroot/music/midi/songs/%=@%\">%@%</a></td>"
+	sstr="${sstr}<td>%filesize%</td>"
+	case "$rtype" in
+		"hk")	sstr="${sstr}<td>%*%</td>"	;;
+		*)	sstr="${sstr}<td>%name%</td>"	;;
+	esac
+	createlist "<tr>${sstr}</tr>"
+	openpage
+	printpage
+	closepage
+	;;
+esac
+
+cleanupandleave
+# notreached
+
+# end of mhlscr

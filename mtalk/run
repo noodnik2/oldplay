@@ -1,0 +1,2 @@
+# /usr/local/bin/mtalk > /tmp/mtalk.log 2>&1 &
+mtalk $* > /tmp/mtalk.log 2>&1 &

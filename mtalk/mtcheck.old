@@ -1,0 +1,25 @@
+#! /bin/sh
+
+#
+#	This script checks if $user is around somewhere...
+#
+
+user=$1
+
+#
+#	check if user is on mtalk...
+#
+
+# ps afx | grep mtalk | grep -v "grep mtalk" 
+
+
+#
+#	check if user is a host that is on the net...
+#
+
+if ping -r -q -c 1 $user 2>&1 | grep " 100% packet loss" > /dev/null; then
+	exit 1
+fi
+
+exit 0
+

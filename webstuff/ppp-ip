@@ -1,0 +1,34 @@
+#! /bin/ksh
+#
+#
+
+tmpfile="/tmp/getmyip$$.tmp"
+
+cleanup()
+{
+	rm -f $tmpfile
+}
+
+if /sbin/ifconfig ppp0 > $tmpfile; then
+:
+else
+	echo "no interface" 1>& 2
+	cleanup
+	exit 1
+fi
+
+x=`awk '
+/inet addr:/ { x=substr($2, 6) }
+END { print x }
+' < $tmpfile`
+
+if [ "$x" = "" ]; then
+	echo "can't get IP" 1>& 2 
+	cleanup
+	exit 2
+fi
+
+echo $x
+
+cleanup
+exit 0

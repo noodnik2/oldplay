@@ -1,0 +1,31 @@
+
+#
+#	Makefile for 'which' program under MS-DOS
+#
+
+PROG=which.exe
+DESTDIR= D:\marty\bin
+
+CFLAGS=/Zp /Gs /AS
+LFLAGS=/stack:4096
+# LIB= $(LIB)\slibce.lib
+CC=cl
+
+.c.obj:
+	$(CC) -c $(CFLAGS) $*.c
+
+WHICH_OBJ= which.obj srchfile.obj
+
+$(PROG): $(WHICH_OBJ)
+	$(CC) -o $@ $(WHICH_OBJ)
+
+install: $(PROG)
+	copy $(PROG) $(DESTDIR)
+
+clean:
+	FOR %%X IN ($(PROG) *.OBJ *.BAK) DO erase %%X
+
+which.obj:	compiler.h srchfile.h
+
+srchfile.obj:	compiler.h srchfile.h
+

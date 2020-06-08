@@ -1,0 +1,146 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+
+# Create a scrollbar on the right side of the main window and a listbox
+# on the left side.
+
+proc myexitproc {} {
+	destroy .
+}
+
+proc mycloseproc {} {
+	myexitproc
+}
+
+proc myscanproc {} {
+	global gx1 gy1 gx0 gy0 gcolor ghtone gprv gbrt gcntr gexp gres
+	set prevopt ""
+	if {$gprv != 0} {
+		set prevopt "-p"
+	}
+	set htoneopt ""
+	if {$ghtone != 0} {
+		set htoneopt "-a"
+	}
+	exec sh -c "mtekscan $htoneopt $prevopt $gcolor -f $gx0 $gy0 $gx1 $gy1 -d $gbrt -k $gcntr -e $gexp -r $gres | xv -"
+}
+
+proc mysetupproc {} {
+	global gx1 gy1 gx0 gy0 gcolor ghtone gprv gbrt gcntr gexp gres
+    	set gy1	11
+    	set gx1	8
+    	set gy0	0
+    	set gx0	0
+    	set gbrt	10
+    	set gcntr	0
+    	set gexp	0
+    	set gres	300
+    	set gcolor	"-c"
+    	set ghtone	""
+}
+
+proc mysetproc {var val} {
+	global $var
+	set $var $val
+}
+
+proc mypopulateproc {} {
+	global gx1 gy1 gx0 gy0 gcolor ghtone gprv gbrt gcntr gexp gres
+
+	frame .right
+
+	frame .right.btn
+	button .right.btn.close -command "mycloseproc" -text "Close"
+	button .right.btn.scan -command "myscanproc" -text "Scan"
+	pack .right.btn.close .right.btn.scan -side top
+
+	frame .right.c -borderwidth 10 -bd 2 -relief sunken
+	frame .right.c.rb -borderwidth 10 -bd 2 -relief raised
+	radiobutton .right.c.rb.color -text "Color" -variable gcolor -value "-c"
+	radiobutton .right.c.rb.bw -text "B/W" -variable gcolor -value "-g"
+	pack .right.c.rb.color .right.c.rb.bw -side top
+
+	frame .right.c.kb -borderwidth 10 -bd 2 -relief raised
+	checkbutton .right.c.kb.prev -text "Preview" -variable gprv
+	checkbutton .right.c.kb.htone -text "Halftone" -variable ghtone
+	pack .right.c.kb.prev .right.c.kb.htone -side top
+
+	pack .right.c.rb .right.c.kb -side top -fill x
+
+	pack .right.btn -side top -fill x
+	pack .right.c -side bottom -fill x
+
+	frame .left -borderwidth 10 -bd 2 -relief sunken
+	frame .left.p1
+
+	frame .left.p1.hscale -borderwidth 10 -bd 2 -relief raised
+	scale .left.p1.hscale.scale -orient horizontal -length 100 -from 0 -to 8 \
+		-command "mysetproc gx1" -label "x1"
+	pack .left.p1.hscale.scale -side top -fill y
+	.left.p1.hscale.scale set $gx1
+
+	frame .left.p1.vscale -borderwidth 10 -bd 2 -relief raised
+	scale .left.p1.vscale.scale -orient horizontal -length 100 -from 0 -to 11 \
+		-command "mysetproc gy1" -label "y1"
+	pack .left.p1.vscale.scale -side top -fill y
+	.left.p1.vscale.scale set $gy1
+
+	frame .left.p1.hoff -borderwidth 10 -bd 2 -relief raised
+	scale .left.p1.hoff.scale -orient horizontal -length 100 -from 0 -to 8 \
+		-command "mysetproc gx0" -label "x0"
+	pack .left.p1.hoff.scale -side top -fill y
+	.left.p1.hoff.scale set $gx0
+
+	frame .left.p1.voff -borderwidth 10 -bd 2 -relief raised
+	scale .left.p1.voff.scale -orient horizontal -length 100 -from 0 -to 11 \
+		-command "mysetproc gy0" -label "y0"
+	pack .left.p1.voff.scale -side top -fill y
+	.left.p1.voff.scale set $gy0
+
+	pack .left.p1.hoff .left.p1.voff .left.p1.hscale .left.p1.vscale -side top
+
+	frame .left.p2
+	frame .left.p2.res -borderwidth 10 -bd 2 -relief raised
+	scale .left.p2.res.scale -orient horizontal -length 100 -from 10 -to 600 \
+		-command "mysetproc gres" -label "Resolution"
+	pack .left.p2.res.scale -side top -fill y
+	.left.p2.res.scale set $gres
+
+	frame .left.p2.cont -borderwidth 10 -bd 2 -relief raised
+	scale .left.p2.cont.scale -orient horizontal -length 100 -from -42 -to 49 \
+		-command "mysetproc gcntr" -label "Contrast"
+	pack .left.p2.cont.scale -side top -fill y
+	.left.p2.cont.scale set $gcntr
+
+	frame .left.p2.brt -borderwidth 10 -bd 2 -relief raised
+	scale .left.p2.brt.scale -orient horizontal -length 100 -from 0 -to 100 \
+		-command "mysetproc gbrt" -label "Brightness"
+	pack .left.p2.brt.scale -side top -fill y
+	.left.p2.brt.scale set $gbrt
+
+	frame .left.p2.exp -borderwidth 10 -bd 2 -relief raised
+	scale .left.p2.exp.scale -orient horizontal -length 100 -from -18 -to 21 \
+		-command "mysetproc gexp" -label "Exposure"
+	pack .left.p2.exp.scale -side top -fill y
+	.left.p2.exp.scale set $gexp
+
+	pack .left.p2.res .left.p2.brt .left.p2.cont .left.p2.exp -side top
+	pack .left.p1 .left.p2 -side left
+
+	pack .left .right -side left -fill y
+}
+
+
+# Set up bindings for the browser.
+
+bind all <Control-c> {myexitproc}
+
+wm title . "Adara Imagestar I"
+wm minsize . 1 1
+
+mysetupproc
+mypopulateproc
+
+# do it
+# end

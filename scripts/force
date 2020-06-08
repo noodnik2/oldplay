@@ -1,0 +1,130 @@
+
+prog=`basename $0`
+tfile=/tmp/${prog}$$.list
+argtype="<userid>"
+kcmd="kill"
+auto="no"
+karg="-15"
+#pscmd="ps -ef"
+pscmd="ps aux"
+whocmd="who -u"
+
+syntax()
+{
+	cat 1>& 2 << \!
+
+	force: 	"force" processes to terminate by sending kill signal
+
+	syntax:
+	  (1)	force [-s #] [-y] <userid>
+	  (2)	force [-s #] [-y] -p <ps_id>
+	  (3)	force [-s #] [-y] -w <who_id>
+
+	Invocation (1) forces all processes belonging to <userid>
+	Invocation (2) forces all processes with "ps -ef" string <ps_id>
+	Invocation (3) forces all processes with "who -u" string <who_id>
+
+	Using the option <-s #>, it is possible to send signal #, rather
+	than the terminate signal (15) to the process(es).  See kill(1)
+
+	The program is interactive; the list of processes that are found
+	is put into a file and the user is allowed to edit the file using
+	vi(1).  The user modifies the file to include only those processes
+	he wants forced.  The user is then given a chance to abort the
+	process, or issue a force for all the processes in the list.
+
+	Of course, the user must have sufficient priveledge to force the
+	specified processes.   The superuser can force any process.
+!
+	exit 1
+}
+
+note()
+{
+	echo "${prog}: $*" 1>&2
+}
+
+error()
+{
+	echo "${prog}: $*" 1>&2 
+}
+
+confirm()
+{
+	while true; do
+		note "$*\c"
+		read x
+		case "$x" in
+			y|Y|yes|YES|Yes)	return 0 ;;
+			n|N|no|NO|No)		return 1 ;;
+		esac
+	done
+}
+
+while getopts pws:y c; do
+	case "$c" in
+	p)	argtype="<ps_id>" ;;
+	w)	argtype="<who_id>" ;;
+	s)	karg="-$OPTARG" ;;
+	y)	auto="yes" ;;
+	*)	error "invalid option: ${c}"
+		exit 1
+		;;
+	esac
+done
+shift `expr ${OPTIND} - 1`
+
+case $# in
+1)	arg=$1 ;;
+*)	syntax ;;
+esac
+
+#set -x 
+
+case "$argtype" in
+	"<userid>")	$pscmd | grep "^ *$arg" > $tfile ;;
+	"<ps_id>")	$pscmd | grep "$arg" > $tfile ;;
+	"<who_id>")	$whocmd | grep "$arg" > $tfile ;;
+esac
+
+if [ ! -s $tfile ]; then
+	rm $tfile
+	error "no process with ${argtype}=\"$arg\""
+	exit 1
+fi
+
+dokill()
+{
+	killcmd="${kcmd} ${karg}"
+	case "$argtype" in
+		"<who_id>")
+			mklist="awk \"{ print \\\"${killcmd} \\\" \\\$NF }\""
+			;;
+		*)
+			mklist="awk \"{ print \\\"${killcmd} \\\" \\\$2 }\""
+			;;
+	esac
+	eval $mklist < $tfile | tee /dev/tty | sh
+	rc=$?
+	rm $tfile
+	return $rc
+}
+
+case "$auto" in
+yes)
+	dokill
+	exit $rc
+	;;
+*)
+	vi $tfile 
+	more $tfile
+	if confirm "${prog} these processes? "; then
+		dokill
+		exit $rc
+	else
+		note "nothing done"
+		rm $tfile
+	fi
+esac
+
+exit 0

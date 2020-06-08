@@ -1,0 +1,45 @@
+
+change_one()
+{
+	fn="$1"
+	from_s="$2"
+	to_s="$3"
+
+	echo "$fn: \c"
+	if cp $fn /tmp/$fn; then
+		if schange "$from_s" "$to_s" < /tmp/$fn > $fn; then
+			echo "ok"
+		else
+			echo "error; \c"
+			if cp /tmp/$fn $fn; then
+				echo "restored"
+			else
+				echo "not restored"
+			fi
+		fi	
+	else
+		echo "$0: can't copy: $fn" 1>&2
+	fi
+}
+
+change_all()
+{
+	list="$1"
+	from_s="$2"
+	to_s="$3"
+	for y in $list; do
+		for x in $y; do
+			change_one "$x" "$from_s" "$to_s"
+		done
+	done
+}
+
+ch_flist="*.c *.h *.asm *.mac" 
+
+change()
+{
+	change_all "$ch_flist" FAB MCI
+	change_all "$ch_flist" fab mci
+	change_all "$ch_flist" "File Access" "Message Transfer"
+	change_all "$ch_flist" "Method" "protocol"
+}

@@ -1,0 +1,18 @@
+// start log
+updating: 1 changes
+sorting by FLOC
+sort ok
+opening temp file: wrtest2.tmp
+temp file created: wrtest2.tmp
+copying: 0-24
+read: want 24, read 24
+writing: entry (FLOC rel to old file=24-78)
+copying rest: from 78
+closing existing .INI file
+closing temp file
+resetting cache
+creating backup: wrtest2.bak
+moving temp to new .INI file
+file 'wrtest2.ini' replaced
+reopening file
+// end log

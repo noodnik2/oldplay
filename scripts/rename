@@ -1,0 +1,79 @@
+
+#
+#	this script allows interactive rename of files
+#	we need to change all files with the pattern
+#	WxyB to have the pattern A21xyB instead.
+#
+#	it assumes filenames in MS-DOS filename format,
+#	in that it limits the file name part to 8 characters.
+#
+
+prefix_pattern='\(.*\)w..b.*'
+middle_pattern='.*w\(..\)b.*'
+suffix_pattern='.*w..\(b.*\)'
+new_pattern="a21"
+
+change_name()
+{
+	name=$1
+	newname_name=$2
+	newname=`expr "$name" : $middle_pattern`
+	if [ ! -z "$newname" ]; then
+		prefix=`expr "$name" : $prefix_pattern`
+		suffix=`expr "$name" : $suffix_pattern`
+		name="${prefix}${new_pattern}${newname}${suffix}"
+		fnpart=`expr "$name" : '\(.*\)\..*'`
+		if [ -z "$fnpart" ]; then
+			fnpart="$name"
+			extpart=""
+		else
+			extpart=`expr "$name" : '.*\.\(.*\)'`
+		fi
+		lfnpart=`expr "$fnpart" : '.*'`
+		if [ $lfnpart -gt 8 ]; then
+			fnpart=`expr "$fnpart" : '\(........\).*'`
+		fi
+		if [ -z "$extpart" ]; then
+			name="$fnpart"
+		else
+			name="${fnpart}.${extpart}"
+		fi
+	fi
+	eval ${newname_name}="${name}"
+	eval export ${newname_name}
+}
+
+for fn in $*; do
+	if [ -f $fn -o -d $fn ]; then
+		change_name $fn newfn
+		if [ "$fn" = "$newfn" ]; then
+			continue
+		fi
+		while true; do
+			echo "*** will move ${fn} -> ${newfn}"
+			if [ -f $newfn -o -d $newfn ]; then
+				echo "*** note: file ${newfn} already exists!"
+				echo "          (specify another name)"
+				echo "Specify new name: \c"
+			else
+				echo "<ENTER> to accept, or enter new name: \c"
+			fi
+			ans=""
+			read ans
+			if [ ! -z "$ans" ]; then
+				newfn="$ans"
+				continue
+			fi
+			break
+		done
+		if [ -f $newfn -o -d $newfn ]; then
+			echo "*** file NOT renamed"
+		else
+			mv $fn $newfn
+			if [ $? -ne 0 ]; then
+				echo "*** error while moving file !!!"	
+			fi
+		fi
+	fi
+done
+

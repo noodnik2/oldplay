@@ -1,0 +1,70 @@
+File MSFLAGS.H:
+#ifndef M_SFLAGS_H_INC
+/* #ifndef M_SFLAGS_H_INC */
+File MOBJ.H:
+#ifndef MOBJ_H_INC
+// #ifndef MOBJ_H_INC
+File A21FLOG.H:
+#ifndef A21FLOG_H_INC
+/* #ifndef A21FLOG_H_INC */
+File MDEFS.H:
+#ifndef MDEFS_H_INC
+// #ifndef MDEFS_H_INC
+File A21FLOGT.H:
+#ifndef A21FLOGT_H_INC
+/* #ifndef A21FLOGT_H_INC */
+File MUSRDEF.H:
+#ifndef M_USRDEF_H_INC
+File MPARYSRT.H:
+#ifndef MPARYSRT_H_INC
+// #ifndef MPARYSRT_H_INC
+File COMPILER.H:
+#ifndef COMPILER_H_INC
+/* #ifndef COMPILER_H_INC */
+File COMPDEFS.H:
+#ifndef COMPDEFS_H_INC
+// #ifndef COMPDEFS_H_INC
+File MTHROW.H:
+#ifndef MTHROW_H_INC
+// #ifndef MTHROW_H_INC
+File MSTR.H:
+#ifndef MSTR_H_INC
+// #ifndef MSTR_H_INC
+File A21LOG.H:
+#ifndef A21LOG_H_INC
+/* #ifndef A21LOG_H_INC */
+File MTRACE.H:
+#ifndef M_TRACE_H_INC
+#ifndef M_NOTRACE
+#ifndef M_NOTRACE
+#ifndef M_TRACE_FLAGVAL
+#ifndef Revision
+// #ifndef M_NOTRACE
+// #ifndef M_TRACE_H_INC
+File MINI.H:
+#ifndef         MINI_H_INC
+// #ifndef MINI_H_INC
+File MCLS.H:
+#ifndef MCLS_H_INC
+// #ifndef MCLS_H_INC
+File A21LOGT.H:
+#ifndef A21LOGT_H_INC
+/* #ifndef A21LOGT_H_INC */
+File MPA.H:
+#ifndef MPA_H_INC
+// #ifndef MPA_H_INC
+File A21FLOG0.H:
+#ifndef A21FLOG0_H_INC
+// #ifndef A21FLOG0_H_INC
+File MPARY.H:
+#ifndef MPARY_H_INC
+// #ifndef MPARY_H_INC
+File MCLSTBL.H:
+#ifndef MCLSTBL_H_INC
+// #ifndef MCLSTBL_H_INC
+File MSTRLST.H:
+#ifndef         MSTRLST_H_INC
+// #ifndef MSTRLST_H_INC
+File MPARYORD.H:
+#ifndef MPARYORD_H_INC
+// #ifndef MPARYORD_H_INC

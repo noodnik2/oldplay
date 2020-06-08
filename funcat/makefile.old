@@ -1,0 +1,48 @@
+
+#
+#	makefile for FUNCAT
+#
+
+CLIBS=$(LIB)\slibce.lib
+LINKWITH=$(LIB)\setargv.obj
+
+CFLAGS= /J /Zp /Zl /AS /Gs /Os
+LFLAGS= /noe /stack:3072
+
+FUNCAT_OBJ=FCMAIN.OBJ FCPROC.OBJ FCMSGS.OBJ FCPRINT.OBJ FCSYNTAX.OBJ \
+	   CLGETOPT.OBJ
+
+funcat.exe: $(FUNCAT_OBJ)
+	link $(LFLAGS) @<<
+FCMAIN.OBJ+
+FCPROC.OBJ+
+FCMSGS.OBJ+
+FCPRINT.OBJ+
+FCSYNTAX.OBJ+
+CLGETOPT.OBJ+
+$(LINKWITH)
+funcat
+
+$(CLIBS)
+;
+<<NOKEEP
+
+clean:
+	erase *.err
+	erase *.map
+	erase *.obj
+	erase *.bak
+	erase funcat.exe
+
+fcmain.obj:	compiler.h fc.h clgetopt.h
+
+fcproc.obj:	compiler.h fc.h
+
+fcmsgs.obj:	compiler.h fc.h clgetopt.h
+
+fcprint.obj:	compiler.h fc.h
+
+fcsyntax.obj:	compiler.h
+
+clgetopt.obj:	compiler.h clgetopt.h
+

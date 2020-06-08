@@ -1,0 +1,111 @@
+
+#	flistmc			compiles .flmac profile file 
+#				Copyright (C) 1990-1992, by Marty Ross
+#
+#		flistmc [ edit | help | rm | mc_file ]
+#
+#	If no arguments given, uses source file "$difile", else
+#	uses name of single argument 'mc_file' as source file.
+#
+#	If "edit" is given as the argument value, then the standard
+#	user source file is editted with vi before compiling it.
+#
+#	If "help" is given as the argument value, then the standard
+#	help facility for flist will be with the command "$hffcmd".
+#
+#	If "rm" is given as the argument value, then the user flist
+#	configuration file will be erased.
+#
+#	If the source file does not exist, first it will be created
+#	as a copy of the default system source file: "$dffile".
+#
+#	Source files are compiled by "$mcprog"
+#	Source file is compiled to "$dofile"
+#
+#rootdir="${HOME}/bin"			# root directory
+rootdir="/usr/local/bin"		# root directory
+difile="${HOME}/.flmac.s"		# default source file
+hffcmd="flist -h"			# command for general flist help
+dffile="${rootdir}/flmac.data"		# name of default system source file
+dofile="${HOME}/.flmac"			# default output file
+mcprog="${rootdir}/flmac.prog"		# name of source compiler program
+
+case $# in
+
+	0|1)	;;
+
+	*)	echo "$0: 'help', 'edit', 'rm' or name of file expected" 1>&2 
+		exit 1
+		;;
+
+esac
+
+infile="$difile"			# default input file
+outfile="$dofile"			# output file
+
+case "$1" in
+
+	""|rm|edit|help) ;;
+
+	$outfile)	echo "$0: can't do $1" 1>&2
+			exit 12				# user error
+			;;
+
+	*)		infile="$1"			# users' input file
+			;;
+
+esac
+
+case "$1" in
+
+	help)	if $hffcmd
+		then
+			exit 0
+		fi
+		exit 1
+		;;
+
+	rm)	if [ -f $infile ]; then
+			if rm -i $infile; then
+				echo "$0: macro source removed" 1>&2 
+			fi
+		fi
+		if rm -f $outfile; then
+			echo "$0: flist macros removed" 1>&2 
+			exit 0
+		fi
+		echo "$0: nothing removed" 1>&2 
+		exit 1
+		;;
+
+esac
+
+if [ ! -f $infile ]
+then
+	cp $dffile $infile
+	echo "$0: macro file copied" 1>&2 
+fi
+
+case "$1" in
+	edit)	vi $infile 
+		;;
+esac
+
+# actually compile the dataset.
+
+newout=${outfile}.new
+
+if $mcprog < $infile > $newout; then		# compile
+	if mv $newout $outfile; then
+		echo "$0: macro file udpated" 1>&2
+		exit 0
+	fi
+fi
+
+if [ -f $newout ]; then
+	rm $newout
+fi
+
+echo "$0: macro file unchanged" 1>&2
+exit 1						# compiler error
+

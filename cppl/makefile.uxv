@@ -1,0 +1,39 @@
+#	Revision:		1
+#
+
+#
+#	makefile.uxv			qad-NewARC21 Makefile: CPPL library
+#					Copyright (C) 1995, Contahal Ltd.
+#
+#	for Unix AT&T Unix V / Gnu C
+#
+
+PRODUCT=cppl.a
+OBJLIST=mobj.o mcls.o mclstbl.o		\
+	mpa.o mpasort.o mpasrch.o	\
+	mini.o mstr.o mstrlst.o mpary.o mparysrt.o
+
+INCOPTS=
+
+.SUFFIXES:	.cpp
+CPP=gcc
+
+.cpp.o:
+	$(CPP) -c $(INCOPTS) $*.cpp
+
+all: $(PRODUCT)
+
+clean:
+	rm -r -f $(PRODUCT) $(OBJLIST)
+
+$(PRODUCT):	$(OBJLIST)
+	rm -f $(PRODUCT)
+	ar -r $(PRODUCT) $(OBJLIST)
+
+mstr.o:		mstr.h 
+
+mstrlst.o:	mstrlst.h 
+
+mini.o:		mini.h mstr.h
+
+# end of makefile

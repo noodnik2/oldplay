@@ -1,0 +1,17 @@
+/* clgetopt.h (temporary) */
+
+#ifndef	CLGETOPT_H_INC
+#define	CLGETOPT_H_INC
+
+#include	"compiler.h"
+#include	<stdio.h>
+
+static char *clsprogname= "?" ;
+
+#define	clinit(argv)	clsprogname= argv[0]
+#define	clerror(s)	fprintf(stderr, "%s: %s\n", clsprogname, s)
+
+/* #ifndef CLGETOPT_H_INC */
+#endif
+
+/* end of clgetopt.h */

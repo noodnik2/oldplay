@@ -1,0 +1,36 @@
+
+#
+#	Makefile for Unix "nlbl" command
+#
+
+PRODUCT=nlbl
+
+SHELL= /bin/sh
+DESTDIR= /usr/local/bin
+DGRP=bin
+
+NLBL_OBJ= nlbl.o clgetopt.o
+
+$(PRODUCT):	$(NLBL_OBJ)
+	$(CC) -o $(PRODUCT) $(NLBL_OBJ)
+
+install: $(PRODUCT)
+	cp $(PRODUCT) $(DESTDIR)
+	strip $(DESTDIR)/$(PRODUCT)
+	chmod 775 $(DESTDIR)/$(PRODUCT)
+	chgrp $(DGRP) $(DESTDIR)/$(PRODUCT)
+
+clean:
+	rm -f *.o core $(PRODUCT)
+
+#
+#
+#
+
+compiler.h:	compiler.uxv
+	copy compiler.uxv compiler.h
+
+nlbl.o:		compiler.h clgetopt.h 
+
+clgetopt.o:	compiler.h clgetopt.h 
+

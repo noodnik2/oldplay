@@ -1,0 +1,394 @@
+/*
+
+	selective replace
+
+	syntax:
+		sr [/y] [/h] "old" "new" < input_file > output_file
+
+	prompts user at terminal for each change, user
+	enters 'y' if ok to change, or 'n' if change is
+	not okay.  pressing enter is not required.
+
+*/
+
+#include	<stdio.h>
+#include	<fcntl.h>
+#include	<signal.h>
+#include	<sys/types.h>
+
+#include	"compiler.h"
+#include	"clgetopt.h"
+
+#if	COMPILER==CCMS510 || COMPILER==CCMS600
+#include	<bios.h>
+#endif
+
+int stopflag= 0 ;
+static int tinted= 0;
+
+void tinit(), tstop() ;
+void subst() ;
+
+struct parms {
+	int yesflag ;
+	int help ;
+	char **arglist ;
+	int nargs ;
+} ;
+
+static struct parms p ;
+
+static void setdefaults() ;
+static void init() ;
+static void syntax() ;
+
+void main(argc, argv)
+int argc;
+char *argv[];
+{
+	char buf[256] ;
+	char old[256] ;
+	int i, tfh ;
+
+	setdefaults() ;
+	init(argc, argv) ;
+
+#if	OPSYS==OPUNIX
+	if ((tfh= open("/dev/tty", O_RDONLY|O_NDELAY))< 0) {
+		fprintf(stderr, "can't open tty input") ;
+		exit(1) ;
+	}
+#endif
+
+#if	OPSYS==OPMSDOS
+	tfh= 0 ;
+#endif
+
+	tinit(tfh) ;
+	while(!stopflag && (gets(buf) != NULL)) {
+		strcpy(old, buf) ;
+		for (
+			i= 0;
+			!stopflag && replace(
+				p.arglist[0],
+				p.arglist[1],
+				buf,
+				&i
+			);
+			i++
+		) {
+			if (!p.yesflag) {
+				fprintf(stderr, "OLD: %s\n", old) ;
+				fprintf(stderr, "NEW: %s\n", buf) ;
+				fprintf(stderr, "OK? ") ;
+				fflush(stderr) ;
+				if (!ans_yes(tfh)) strcpy(buf, old) ;
+			}
+		}
+		puts(buf) ;
+	}
+	if (stopflag) fprintf(stderr, "--Break--\n") ;
+	tstop(tfh) ;
+	close(tfh) ;
+}
+
+static void setdefaults()
+{
+	memset((char *)&p, '\0', sizeof(struct parms)) ;
+}
+
+static void init(argc, argv)
+int argc ;
+char *argv[] ;
+{
+	int i ;
+
+	clinit(argv) ;
+	while((i= clgetopt(argc, argv, "hy"))> 0) {
+		switch(i) {
+			case 'h':	p.help= 1 ;	break ;
+			case 'y':	p.yesflag= 1;	break ;
+			default:	exit(1) ;	break ;
+		}
+	}
+
+	p.arglist= argv + cloptind ;
+	p.nargs= argc - cloptind ;
+
+	if (p.help) {
+		syntax() ;
+		exit(0) ;
+	}
+	
+	if (p.nargs != 2) {
+		clerror("missing parameter(s): [from_string] [to_string]") ;
+		syntax() ;
+		exit(1) ;
+	}
+}
+
+static void syntax()
+{
+	printf("syntax:\n") ;
+#if	OPSYS==OPMSDOS
+	printf("\tschange [/y] [/h] \"old\" \"new\" < input_file > output_file\n") ;
+#endif
+#if	OPSYS==OPUNIX
+	printf("\tschange [-y] [-h] \"old\" \"new\" < input_file > output_file\n") ;
+#endif
+}
+
+static int replace(old, new, s, ip)
+char *old, *new, *s ;
+int *ip ;
+{
+	int i ;
+
+	s+= (*ip) ;
+	if ((i= index(old, s))< 0) return(0) ;
+	subst(s, new, i, strlen(old)) ;
+	(*ip)+= i ;
+	return(1) ;
+}
+
+static void subst(s, new, pos, oldlen)
+char *s, *new ;
+int pos, oldlen ;
+{
+	int x, d, newlen ;
+
+	newlen= strlen(new) ;
+	movelblk(s+pos+oldlen, s+pos+newlen, strlen(s+pos+oldlen)+1) ;
+	memcpy(s+pos, new, newlen) ;
+}
+
+static int index(n, h)
+char *n, *h ;
+{
+	register int i ;
+	int l ;
+
+	l= strlen(n) ;
+
+	for (i= 0; h[i]; i++) {
+		if (memcmp(n, h+i, l)==0) return(i) ;
+	}
+	return(-1) ;
+}
+
+/* 
+	Note:  This routine is supposed to handle overlapping blocks 
+	       correctly.  Experiments with Sun 3/50 compiler indicates 
+	       that memcpy() does this.  Experiments with IX386 indicates
+	       that it does not.
+*/
+static int movelblk(source,dest,length) 
+unsigned char *source, *dest;
+unsigned length;
+{
+/*
+	Let     source = address of begin of source
+		esrc   = address of end of source move (source + length - 1)
+		dest   = address of begin of dest
+		edst   = address of end of dest move (dest + length - 1)
+
+	Case 1: dest>esrc
+		source:  ccccccccccc
+		dest:                   cccccccccccc
+		
+	Case 2: edest<src
+		source:                 cccccccccccc
+		dest:    cccccccccccc
+
+	Case 3: not case 1 or 2 and (dest<esrc && dest>source)
+		source:  cccccccccccc
+		dest:             ccccccccccccc
+
+	Case 4: not 1, 2, or 3 and source<edst
+		source:           ccccccccccccc
+		dest:    cccccccccccc
+		(This case probably does not require special handling, but
+		 we will take no chances)
+*/
+
+	register unsigned char *esrc, *edst ;
+	int l ;
+
+	if (source==dest) return(1) ;
+
+	while (length) {
+
+		esrc = source + ((int) (length - 1)) ;
+		edst = dest   + ((int) (length - 1)) ;
+
+		if (dest>esrc || edst<source) { /* cases 1 and 2        */
+			memcpy(dest,source,length) ;
+			return(1) ;
+		}
+		if ((dest> source) && (dest<=esrc)) { /* case 3         */
+			l = edst - esrc ;
+			memcpy(esrc+1,esrc-l+1,l) ;
+			length -= l ;
+
+		}
+		else {                          /* case 4               */
+#if 0
+			l = dest - source ;
+#else
+			l = source - dest ;
+#endif
+			memcpy(dest,source,l) ;
+			dest += l ;
+			source += l ;
+			length -= l ;
+		}
+	}
+	return(1) ;
+}
+
+static int ans_yes(fh)
+int fh ;
+{
+	char c ;
+	int yes ;
+
+#if	OPSYS==OPUNIX
+	while(!stopflag && (read(fh, &c, 1)==0)) ;
+	if (stopflag) return('A') ;
+#endif
+
+#if	OPSYS==OPMSDOS
+	while(!stopflag && !chkkbd()) ;
+	if (stopflag) return('A') ;
+	c= rdckbd() ;
+#endif
+
+	yes= ((c=='y') || (c=='Y')) ;
+	fprintf(stderr, yes? "yes\n": "no\n") ;
+	return(yes) ;
+}
+
+static void setbrk(arg)
+int arg ;
+{
+	stopflag= 1;
+	signal(SIGINT, setbrk) ; 
+}
+
+static void tinit(fh)
+int fh ;
+{
+	if (tinted) return;
+				/* 1.  Break Key handling	*/
+	signal(SIGINT, setbrk);
+	stopflag= 0;
+
+#if	OPSYS==OPUNIX
+				/* 2. binary keyboard 		*/
+	binary(fh, 1,0) ; 
+#endif
+	tinted= 1;
+}
+
+static void tstop(fh)
+int fh ;
+{
+	if (tinted==0) return;
+				/* 1. Break Key handling 	*/
+	signal(SIGINT, 0);
+
+#if	OPSYS==OPUNIX
+				/* 2. binary keyboard		*/
+	binary(fh, 0,0) ; 
+#endif
+	tinted= 0;
+}
+
+
+#if	OPSYS==OPUNIX
+#if	OPSLVL==OPLBSD42
+
+#include <sys/stat.h>
+#include <sgtty.h>
+
+
+static int binary(fh, setflg,scope)
+int fh, setflg, scope;
+{
+        static struct sgttyb ttysold;
+	struct sgttyb ttys;
+
+        if (setflg) {   /* set binary */
+                if (gtty (fh, &ttys) < 0) return(0); /* failed */
+		memcpy(&ttysold,&ttys,sizeof(ttysold));
+                ttys.sg_flags |= CBREAK;        /* set for RAW Mode */
+                ttys.sg_flags &= ~ECHO;         /* set no ECHO */
+                if (scope) {            /* cover all values? */
+                        ttys.sg_flags &= ~XTABS;        /* set no tab exp */
+                        ttys.sg_flags &= ~LCASE;        /* set no case xlate */
+                        ttys.sg_flags |= ANYP;          /* set any parity */
+                        ttys.sg_flags &= ~NL3;          /* no delays on nl */
+                        ttys.sg_flags &= ~TAB0;         /* no tab delays */
+                        ttys.sg_flags &= ~TAB1;
+                        ttys.sg_flags &= ~CR3;          /* no CR delay */
+                        ttys.sg_flags &= ~FF1;          /* no FF delay */
+                        ttys.sg_flags &= ~BS1;          /* no BS delay */
+                }
+                if (stty (fh, &ttys) < 0) return(0); /* failed */
+                return(0);
+        }
+        else {          /* clear binary */
+                if (stty (fh, &ttysold) < 0) return (0);
+                return(0);   /* OK */
+        }
+}
+
+#endif
+
+#if OPSLVL==OPLUXV
+
+#include <termio.h>
+
+static int binary(fh, setflg,scope)
+int fh, setflg, scope;
+{
+        static struct termio ttysold;
+	struct termio ttys;
+
+        if (setflg) {   /* set binary */ 
+		if (ioctl(fh,TCGETA,&ttys)<0) {
+			return(0) ; 
+		}
+		memcpy(&ttysold,&ttys,sizeof(ttysold));
+		ttys.c_lflag &= ~ECHO ; 	/* don't post output	*/
+		ttys.c_lflag &= ~ICANON ; 	/* disable erase and kill */
+		ttys.c_iflag |= BRKINT ; 	/* signal interrupt break */
+		ttys.c_cc[VEOF] = 1 ; 		/* 1 char groups 	*/
+		if (ioctl(fh,TCSETA,&ttys)<0) {
+			return(0) ; 
+		}
+	} 
+	else { 
+                if (ioctl(fh,TCSETA,&ttysold)<0) {
+			return(0) ; 
+		} 
+	} 
+	return(0) ; 
+}
+
+#endif
+#endif
+
+#if	COMPILER==CCMS510 || COMPILER==CCMS600
+
+int chkkbd()
+{
+	return((int)_bios_keybrd(_KEYBRD_READY)) ;
+}
+
+int rdckbd()
+{
+	return((int)_bios_keybrd(_KEYBRD_READ)) ;
+}
+
+#endif

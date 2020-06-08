@@ -1,0 +1,130 @@
+#	Revision:	11
+#
+
+#
+#	Makefile for flist for IBM-PC Microsoft C 6.00
+#	Copyright (C) 1992, Contahal Ltd.
+#
+
+FLIST_EXE=flist.exe
+FLIST_EXEBAK=flist.bak
+
+MODEL=S
+
+# INSTDIR=$(HD)\marty\bin
+# CURSDIR=\arc21src\cport\curses
+
+HD=D:
+INSTDIR=$(HD)\bin
+CURSDIR=$(HD)\arc21src\cport\curses
+
+CURSLIB= $(CURSDIR)\$(MODEL)curses.lib
+INCLUDE=$(INCLUDE);$(CURSDIR)
+LFLAGS= /stack:32000 /noe
+CFLAGS= /A$(MODEL) /Zp /Zl /nologo
+CD= $(HD)\C6
+# CC= $(CD)\bin\cl
+CLIBS=$(CD)\lib\$(MODEL)libce.lib+$(CURSLIB)
+
+.c.obj:
+	@$(CC) /c $(CFLAGS) $*.c
+
+FLIST1_OBJ= \
+	clgetopt.obj \
+	srchfile.obj \
+	statfile.obj \
+	dirlist.obj \
+	syntax.obj \
+	flist.obj \
+	doflist.obj \
+	getcmd.obj \
+	docmd.obj \
+	sortby.obj \
+	list.obj
+
+FLIST2_OBJ= \
+	rddstr.obj \
+	macro.obj \
+	cescstr.obj \
+	sparse.obj \
+	procscn.obj \
+	setscn.obj \
+	scn.obj \
+	bswap.obj \
+	scnq.obj
+
+all:	$(FLIST_EXE)
+
+$(FLIST_EXE):	$(FLIST1_OBJ) $(FLIST2_OBJ)
+	link $(LFLAGS) @<<
+$(FLIST1_OBJ)+
+$(FLIST2_OBJ)+
+$(CD)\lib\setargv.obj
+$@
+
+$(CLIBS)
+;
+<<NOKEEP
+
+install:	$(FLIST_EXE)
+	copy $(INSTDIR)\$(FLIST_EXE) $(INSTDIR)\$(FLIST_EXEBAK)
+	copy $(FLIST_EXE) $(INSTDIR)
+	erase $(FLIST_EXE)
+
+clean:	clean.dat
+	FOR %%X IN (*.obj *.map *.exe *.bak *.log) DO erase %%X
+
+clean.dat:
+	FOR %%X IN (*.idx *.dat) DO erase %%X
+
+#
+#	C-header file dependencies
+#
+
+compiler.h:	compiler.p6s
+	copy compiler.p6s compiler.h
+
+#
+#	C-object file dependencies
+#
+
+bswap.obj:	compiler.h 
+
+cescstr.obj:	compiler.h flist.h 
+
+clgetopt.obj:	compiler.h clgetopt.h 
+
+srchfile.obj:	compiler.h srchfile.h
+
+docmd.obj:	compiler.h flist.h 
+
+doflist.obj:	compiler.h flist.h 
+
+flist.obj:	compiler.h clgetopt.h flist.h 
+
+getcmd.obj:	compiler.h flist.h 
+
+list.obj:	compiler.h flist.h rddir.h 
+
+macro.obj:	compiler.h flist.h 
+
+procscn.obj:	compiler.h flist.h 
+
+rddir.obj:	compiler.h rddir.h 
+
+rddstr.obj:	compiler.h rddstr.h 
+
+scn.obj:   	compiler.h flist.h 
+
+scnq.obj:  	compiler.h flist.h 
+
+setscn.obj:	compiler.h flist.h 
+
+sortby.obj:	compiler.h flist.h 
+
+sparse.obj:	compiler.h flist.h 
+
+statfile.obj:	compiler.h flist.h 
+
+syntax.obj:	compiler.h flist.h srchfile.h
+

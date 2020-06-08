@@ -1,0 +1,55 @@
+/*	Revision:		1
+*/
+
+/*
+
+	_@l_.h			_@u_ C Header: Main Module
+					Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+#ifndef	_@u__H_INC
+#define	_@u__H_INC
+
+/*
+	sub-#includes
+*/
+#include	<stdio.h>
+
+/*
+	#defines
+*/
+
+#define	_@u__E			int
+#define	_@u_E_SUCCESS		0
+#define	_@u_E_HELP     		1
+#define	_@u_E_BADARGS  		12
+#define	_@u_E_FAILURE  		99
+
+#define	_@u__BOOL		int
+#define	_@u_BOOL_FALSE		0
+#define	_@u_BOOL_TRUE		(!_@u_BOOL_FALSE)
+
+
+/*
+	structures, typedefs
+*/
+
+struct _@l__parms {
+	_@u__BOOL bHelp ;
+	_@u__BOOL bQuiet ;
+	int iDebugLevel ;
+} ;
+
+
+/*
+	function decls
+*/
+
+void main(int argc, char **argv) ;
+
+
+/* #ifndef _@u__H_INC */
+#endif
+
+/* end of _@l_.h */

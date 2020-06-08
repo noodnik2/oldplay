@@ -1,0 +1,122 @@
+BROWSE(C1)		     User Command			BROWSE(C1)
+
+NAME
+	browse, - full screen interactive file browse utility
+
+
+SYNOPSIS
+
+	browse [-options] { [-h] | [files] }
+
+
+DESCRIPTION
+
+Similar to BROWSE under VM/CMS, browse(c1) displays the contents of the
+selected files in an interactive, full-screen mode.  Once in browse(c1),
+you can page forward and backward, move right or left, go to a particular
+line, display the data in hexadecimal, or search for a particular string
+of characters.  Also, you can perform UNIX commands by prefixing a com-
+mand with the character '!'.
+
+
+ARGUMENTS
+
+The arguments typed become the list of files to be displayed.  If no
+files are typed, browse does nothing.
+
+
+OPTIONS
+
+To get help about browse(c1), use the -h option.  You can get a hard-
+copy of the browse documentation by routing the output to the printer:
+
+	$ browse -h | lp
+
+	
+The set of recognized options is:
+
+
+		-b	file is binary; don't parse records on \n
+		-h	get help on using browse
+		-m	text matching insensitive to case
+		-r #	set record size to #
+		-s	set scale on line 0
+		-t	don't do tab8 expansion
+		-x	hex display mode
+		-X	hex/char display
+		-z	enable debug mode
+
+
+USAGE
+
+In browse, a command line is always present at the top of the screen.  When
+the cursor in the command area, browse commands may be entered.  The current
+set of browse commands is:
+
+
+	Command	    Arguments	         Function
+	=======	    =========	         ========
+
+	backward    #		         backup # pages
+	down	    #		         advance # lines
+	enter	    filename	         enter browse on filename
+	exit				 exit browse
+	findstr	    text		 locate text forward from top
+	findbin				 locate non-text character
+	help				 display browse help file
+	left	    #		    	 move left # columns
+	next	    #		   	 advance # lines
+	quit				 exit browse	
+	right	    #		         move right # columns
+	set	    hex {off|on|char}  	 set hex display mode 
+	set	    tab {off|on}	 set tab8 expansion
+	set	    case {r|i}		 respect or ignore case: findstr
+	shell	    cmd			 execute cmd in shell
+	up	    #			 backup # lines
+
+	Notes:
+
+	(1)	shorthand notations for "findstr", "shell", and "goto"
+		are available.  Prefix the string or command with "/"
+		or "!" for "findstr" or "shell", respectively, or type
+		the number of the line for "goto".
+
+	(2)	text location is case-sensitive unless the "set 
+		case ignore" command has been given, or the -m
+		option was specified.
+
+In addition to the command line, control-keys are defined to invoke
+many of the above functions.  The table of control functions follows:
+
+	Key		Function
+	===		========
+	
+	Control-M (CR)	return to command line, or perform command
+	Control-C	quit
+	Control-D	forward
+	Control-U	backward
+	Control-F	make cursor line the top line
+	Control-W	show cursor position on command line
+	Control-K	move cursor up
+	Control-J	move cursor down
+	Control-H	move cursor back
+	Control-L	move cursor forward
+	Control-R	redraw screen
+
+
+DIAGNOSTICS
+
+	The exit status of browse is the number of files NOT processed
+	(could not be opened, read, etc.).
+
+
+FILES
+	/usr/local/bin/browse		browse executable
+	/usr/local/bin/browse.man1	this (temporary) help file
+
+
+BUGS
+	(1)	the documentation is not complete at this time.
+
+	(2)	user errors are sporadically reported only by sounding the
+		terminal bell or flashing the screen.

@@ -1,0 +1,9 @@
+#! /bin/csh
+
+foreach x (`find . -type d -print`)
+	echo $x
+	chgrp usr $x/*
+	chown mdr $x/*
+	chmod go-w $x/*
+end
+

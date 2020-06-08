@@ -1,0 +1,711 @@
+set graphics on
+*ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+*º STATA/GRAPHICS tutorial setup º
+*ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³     To demonstrate STATA/GRAPHICS we will use the automobile data        ³
+*³ that we used in the introduction.  Remember that this data was stored    ³
+*³ as "auto.dta".  Before using the data, we give two commands to clear     ³
+*³ STATA's work area.                                                       ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+drop _all
+label drop _all
+use auto
+
+
+
+
+more
+
+*ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+*º Graphic Styles º
+*ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA/GRAPHICS provides six graphic styles, known as                ³
+*³                                                                          ³
+*³             twoway   meaning    twoway scatter plots                     ³
+*³             matrix   meaning    twoway scatter plot matrices             ³
+*³             oneway   meaning    oneway scatter plots                     ³
+*³             box      meaning    box plots                                ³
+*³             bar      meaning    bar charts                               ³
+*³             pie      meaning    pie charts                               ³
+*³                                                                          ³
+*³ We will begin by illustrating the twoway scatter plot, plotting miles    ³
+*³ per gallon against engine displacement.                                  ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+more
+plot mpg displ
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      The command that made the last image is on the top of the screen.   ³
+*³ STATA/GRAPHICS will allow us to manipulate the basic image and add       ³
+*³ labeling, grid lines, and titles.  Here are two more views of the same   ³
+*³ graph.  In the first we add axis labeling, and in the second we add      ³
+*³ grid lines too.                                                          ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg displ, xlabel ylabel title("MPG vs. Engine Displacement")
+plot mpg displ, xlabel ylabel xline yline noaxis title("MPG vs. Displacement")
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      The commands that made the last two images are on the top of the    ³
+*³ screen.  Since drawing graphs clears the screen, throughout this tu-     ³
+*³ torial we follow the practice of afterwards leaving the commands at the  ³
+*³ top of the screen so that you can review them.                           ³
+*³                                                                          ³
+*³      STATA/GRAPHICS also allows us to take full control of the image and ³
+*³ specify exactly where we want labels, tick marks, and grid lines.  We    ³
+*³ will not demonstrate those capabilities since we want to concentrate on  ³
+*³ the basic images.                                                        ³
+*³                                                                          ³
+*³      We just made a scatter plot of MPG vs. Engine displacement.  Next   ³
+*³ we will connect the points with straight lines.                          ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+more
+plot mpg displ, connect(l) sort
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      In this case connecting the points was not very informative.        ³
+*³ STATA/GRAPHICS can also connect the points using a smooth cubic spline.  ³
+*³ It does this by dividing the x-axis into 200 intervals and calculating   ³
+*³ the median x and y value in each of them.  Those values are then used    ³
+*³ for the calculation and drawing of the cubic spline.                     ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg displ, connect(s)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      We can use splines to achieve some amount of data smoothing by      ³
+*³ reducing the number of bands STATA/GRAPHICS uses to fit the spline       ³
+*³ function.  Remember that by default, STATA/GRAPHICS uses 200 bands.      ³
+*³ In the next example, we reduce the number of bands to 12.                ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg displ, connect(s) bands(12)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      Splines are only one way of graphically summarizing data.  We       ³
+*³ could, for instance, draw the regression line.  To do this we must run   ³
+*³ the regression.  We do so on the next screen.  We will then plot the     ³
+*³ data and the regression line.                                            ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+regress mpg displ
+generate hat=_pred
+
+
+more
+plot mpg hat displ, symbol(O.) connect(.l) sort
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      We can even combine the data, the spline, and the regression line   ³
+*³ into a single image.                                                     ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg hat displ, symbol(O.) connect(sl) sort bands(12)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      One of STATA/GRAPHICS most powerful images is the scatter plot mat- ³
+*³ rix, a generalization of the scatter plot.  We will show you one first,  ³
+*³ describe it, and then show it to you again.                              ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg weight displ, matrix symbol(o)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      The scatter plot matrix is arranged the same as a correlation mat-  ³
+*³ rix.  Look at the command above.  We told STATA to form a matrix with    ³
+*³ rows and columns labeled "mpg", "weight", and "displ".  Each entry in    ³
+*³ the matrix is a twoway scatter plot.  Thus, the top right of the image   ³
+*³ you just saw showed the scatter plot we previously constructed, MPG vs.  ³
+*³ Engine displacement.  The lower left showed the same graph turned        ³
+*³ around:  Engine displacement vs. MPG.                                    ³
+*³                                                                          ³
+*³      The variables listed down the left side of the screen showed the    ³
+*³ y-axis variable.  The variables listed along the bottom of the screen    ³
+*³ showed the x-axis variable.  Look again.                                 ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+more
+plot mpg weight displ, matrix symbol(o)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA views scatter plot matrices as a generalization of the        ³
+*³ standard twoway scatter plot, so anything we can do to a twoway          ³
+*³ scatter plot we can do to a scatter plot matrix.                         ³
+*³                                                                          ³
+*³      In the next example we re-draw the scatter plot matrix and in-      ³
+*³ clude the smoothed spline function using 12 bands.                       ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot mpg weight displ, matrix connect(s) bands(12) density(20)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      So far we have drawn 3 by 3 scatter plots.  You may wonder what     ³
+*³ happens if we specify an additional variable, so that the matrix is      ³
+*³ 4 by 4.  In that case, STATA scales each of the pictures and makes       ³
+*³ it slightly smaller.                                                     ³
+*³                                                                          ³
+*³      In the next example we add the variable "price" to the matrix.      ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price mpg weight displ, matrix symbol(o)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      The 4 by 4 matrix is still readable.  In fact, the images can       ³
+*³ become quite small and continue to communicate effectively.              ³
+*³                                                                          ³
+*³      The maximum number of variables in a scatter plot matrix is 8.      ³
+*³ Here is such a matrix.                                                   ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price mpg weight displ hdroom trunk length turn, matrix
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      A oneway scatter plot shows the distribution of the data by drawing ³
+*³ an axis and then placing vertical lines everywhere that data occurs.     ³
+*³                                                                          ³
+*³      On the next screen we show a oneway scatter plot of "price".        ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price, oneway
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      A box plot shows the distribution of the data by drawing a box      ³
+*³ showing the median, 25th and 75th percentiles, and upper and lower adja- ³
+*³ cent values.  Points outside the adjacent values, called outside values, ³
+*³ are plotted individually.                                                ³
+*³                                                                          ³
+*³      On the next screen we show a box for the variable "price".          ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price, box
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA/GRAPHICS allows us to combine the box and oneway methods of   ³
+*³ showing a distribution, which results in a highly informative display.   ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price, oneway box
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      Examining distributions is most interesting when they are compared  ³
+*³ to each other.  In the following examples, we show three images com-     ³
+*³ paring the price of domestic and foreign cars.                           ³
+*³                                                                          ³
+*³      The first is a box plot, the second a box plot with the outside     ³
+*³ values removed, and the third a oneway scatter combined with a box       ³
+*³ plot.                                                                    ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot price, box by(foreign)
+plot price, box symbol(i) by(foreign)
+plot price, oneway box by(foreign)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA/GRAPHICS allows us to combine twoway scatter plots, oneway    ³
+*³ scatter plots, and box plots in a single, informative diagram.           ³
+*³                                                                          ³
+*³      We show an example by plotting price of cars against their weight.  ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+more
+plot price weight, twoway oneway box
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      To show some more of STATA/GRAPHICS' capabilities, we will use      ³
+*³ Census data on divorce and marriage rates for 49 states (excluding Ne-   ³
+*³ vada).                                                                   ³
+*³                                                                          ³
+*³      Please ignore the "set output error" while we construct the data.   ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+set output error
+use census, clear
+drop if state==28
+generate dvcrate=divorce/pop
+generate mrgrate=marriage/pop
+label var dvcrate "Divorce Rate"
+label var mrgrate "Marriage Rate"
+keep state region mrgrate dvcrate pop
+sort region
+set output proc
+describe
+more
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³     We want to examine the relationship between the divorce rate in a    ³
+*³ state and the marriage rate.  First we will draw a twoway scatter        ³
+*³ showing the relationship.                                                ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot dvcrate mrgrate
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³     Not surprisingly, we see a positive relationship.  We can also use   ³
+*³ STATA/GRAPHICS to examine the relationship separately for each of the    ³
+*³ four Census regions.                                                     ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot dvcrate mrgrate, by(region) symbol(o)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      Combining graphs on the same screen is one of STATA/GRAPHICS most   ³
+*³ powerful features.  In the next screen we use this capability to show    ³
+*³ the relationship within Census region and the overall in one image.      ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot dvcrate mrgrate, by(region) total symbol(o)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      We are graphing state data.  Some states have a much larger pop-    ³
+*³ ulation than others, and we might wish our graph to emphasize the        ³
+*³ populous states.  We can tell STATA/GRAPHICS to scale the circles it     ³
+*³ uses to plot a point so that their area is proportional to a state's     ³
+*³ population.                                                              ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot dvcrate mrgrate =pop
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      We can use the scaled symbols and make separate graphs for each     ³
+*³ census region.                                                           ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+plot dvcrate mrgrate =pop, by(region) symbol(O)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA/GRAPHICS can make presentation-style bar and pie charts.      ³
+*³ We will show an example of a bar chart depicting profits of a fictitious ³
+*³ company over time.                                                       ³
+*³                                                                          ³
+*³      Please ignore the "set output error" while we construct the data.   ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+set output error
+drop _all
+label drop _all
+input int(month profit)
+1  10000
+2  -8000
+3  -6000
+4  -1000
+5  800
+6  5000
+7  1200
+8  3000
+9  3500
+10 -1500
+11 5000
+12 12000
+end
+#delimit ;
+label define month 1 Jan 2 Feb 3 Mar 4 Apr 5 May 6 June 7 July
+8 Aug 9 Sept 10 Oct 11 Nov 12 Dec ;
+#delimit cr
+label values month month
+label var profit "Profit"
+label var month "Month"
+set output proc
+describe
+
+
+
+more
+plot profit, by(month) bar shading(4)
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      STATA/GRAPHICS can make pie charts, and its ability to combine      ³
+*³ images works especially well here.  In the next example we plot the      ³
+*³ contribution to the Gross Domestic Product of agriculture, manufacturing ³
+*³ and services for four countries.                                         ³
+*³                                                                          ³
+*³      Please ignore the "set output error" while we construct the data.   ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+set output error
+drop _all
+label drop _all
+input country agr mfg ser
+1   4.       31.       65.
+2  43.       20.       37.
+3   6.       45.       49.
+4   3.       35.       62.
+end
+label define country 1 Canada 2 India 3 Japan 4 "U.S."
+label values country country
+label var agr "Agriculture"
+label var mfg "Manufacturing"
+label var ser "Services"
+label var country "Country"
+set output proc
+describe
+more
+plot agr mfg ser, pie by(country) title("Contribution to GDP")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+more
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      The demonstration is almost concluded.  If you are interested       ³
+*³ in reading more about the kinds of images presented here, we highly      ³
+*³ recommend two books.                                                     ³
+*³                                                                          ³
+*³              Graphical Methods for Data Analysis                         ³
+*³              by John Chambers, William Cleveland, Beat Kleiner, and      ³
+*³                 Paul A. Tukey                                            ³
+*³              The Wadsworth Statistics/Probability Series                 ³
+*³                                                                          ³
+*³              The Visual Display of Quantitative Information              ³
+*³              by Edward R. Tufte                                          ³
+*³              Graphics Press, Cheshire, Connecticut                       ³
+*³                                                                          ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+
+
+
+
+
+
+more
+drop _all
+label drop _all
+*ÉÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+*º Final Notes º
+*ÈÍÍÍÍÍÍÍÍÍÍÍÍÍ¼
+
+*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+*³      We have not introduced you to all the options or even capabilities  ³
+*³ of STATA/GRAPHICS; you will have to experiment on your own.  You can     ³
+*³ learn more about STATA/GRAPHICS, and its command syntax, by typing       ³
+*³ "help graphics" when this tutorial completes.  You might also want to    ³
+*³ rerun this tutorial and take notes on the commands we gave and try       ³
+*³ modifying them to see what happens.                                      ³
+*³                                                                          ³
+*³      If you have further questions about STATA's capabilities, please    ³
+*³ contact us at                                                            ³
+*³                                                                          ³
+*³                     Computing Resource Center                            ³
+*³                     10801 National Boulevard                             ³
+*³                     Los Angeles, CA 90064                                ³
+*³                     1-800-STATAPC                                        ³
+*³                     1-213-470-4341 in California                         ³
+*ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+more
+

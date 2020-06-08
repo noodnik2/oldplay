@@ -1,0 +1,20 @@
+
+ROOT_DIR=../../..
+CPPL_DIR=$(ROOT_DIR)/cppl
+CPPL_LIB=$(CPPL_DIR)/cppl.a
+
+.SUFFIXES:	.cpp
+
+.cpp.o:
+	gcc -c -I $(CPPL_DIR) $*.cpp
+
+all:	wrtest
+
+new:
+	rm wrtest wrtest.o
+	make
+
+wrtest:	wrtest.o
+	gcc -o wrtest wrtest.o $(CPPL_LIB) -liostream
+
+# end of makefile for iniacc test

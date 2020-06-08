@@ -1,0 +1,247 @@
+FLIST(C1)		     User Command			FLIST(C1)
+
+NAME
+	flist, flistmc - full screen managment for file lists
+
+
+SYNOPSIS
+
+	flist [-options] { [-h] | [-d dir] | [files] }
+
+	flistmc { edit | rm | [mc_file] }
+
+
+DESCRIPTION
+
+Similar to FLIST under VM/CMS, flist(c1) displays a full-screen list
+of the selected files.  Once in flist(c1), you can perform normal UNIX
+file operations such as vi, cp, and rm on the listed files by entering
+the command in the input area immediately to the right of each file-id
+on the screen.  You can also issue flist(c1) sub-commands to sort the
+displayed data, or to enter a new flist level that displays a full-
+screen listing of another set of files.
+
+Before using flist(c1) for the first time, type:
+
+	$ flistmc
+
+flistmc(c1) is a configuration utility for flist(c1).  Use it once
+before your first use of flist(c1) to establish a default macro file
+for you which you can later tailor with the following command:
+
+	$ flistmc edit
+
+
+ARGUMENTS
+
+The arguments typed become the list of files to be displayed.  If no
+files are typed, all files in the current directory are displayed,
+or, by using the option "-d dir", all files in directory "dir" are
+displayed.
+
+
+OPTIONS
+
+To get help about flist(c1), use the -h option.  You can get a hard-
+copy of the flist documentation by routing the output to the printer:
+
+	$ flist -h | lp
+
+	
+The set of recognized options is:
+
+
+		-a	shows hidden files
+		-b	names appear bold
+		-d dir	specify target directory
+		-h	get help on using flist
+		-l	left justify the names
+		-m fn	set the macro file name
+		-n	suppress --more-- after commands
+		-q	don't echo commands
+		-r	recursively expand directories
+		-s	print file sizes
+		-t	print file update times
+		-x	don't redraw screen after commands
+		-z	enter debug mode
+		-I "c"	place "c" in all command lines
+		-T "s"  place "s" on top status line
+
+
+USAGE
+
+Typically, user's files are organized into small compartments called dir-
+ectories.  Think of your HOME directory as the front-door to your house.
+If all your belongings were right there, it would be hard to get around
+at home.  So you create rooms for logical groups of things to store to-
+gether.  To help you remember, you stick a nametag describing the con-
+tents in each room on every door.  When a room becomes too full for com-
+fort, you again subdivide and create new rooms.  
+
+flist manages two types of files: directories, and others.  A directory
+file is like a door into another room.  If you want to open that door to
+enter, type "/e" on the command line to the right of the directory file.
+flist will then list all the files in that directory.  It is possible to
+traverse your entire filesystem using flist in this manner. 
+
+
+ENTERING COMMANDS
+
+Entering a command to the right of a filename will cause your UNIX shell
+to execute the command you type, with the designated filename as its only
+argument.  If you want to see for yourself, just type "echo" on the com-
+mandline next to a file.  (The echo command is useful because it simply
+displays the arguments is receives)  Instead of "echo", you could type
+"vi", or "sas", or "flist -d", or any other command that expects a file-
+name as its argument.  The command will execute on the file next to where
+the command was typed.  If the same command is desired to be performed
+across more than one file, simply type the command next to the first
+file to be processed, then enter an equals sign (=), alone, besides
+each subsequent file.  flist undestands several special command formats,
+each identified by the first character or word.  For example, the = com-
+mand mentioned above copies the previous command to the current command
+area.  There are also \\ (backslash) commands, / (slash) commands, & (stub-
+born) commands and macro commands invoked by a keytroke.
+
+It is possible to control the substitution of filenames into commands.  Five
+tokens are now supported: \=, \!, \~, \@, and \#.  When \= is encountered by
+flist, the designated file name is substituted.  When \! and \~ are seen,
+the file name part, and file type part, are substituted.  When \@ is de-
+tected, the current set of flist options is returned.   This value is useful
+to pass flist options through to subsequent levels.  Finally, \# expands to
+the name of the current directory, as specified by the -d option, or "." if
+none was specified.  If any of these values is encountered, the filename is
+not appended to the command.  Additionally, if a command is prefixed by two
+back-slashes, no automatic substitution is done.  Commands so prefixed are
+called \\ commands, because you must first type \\ before the command.
+
+
+COMMAND EXECUTION
+
+When you press ENTER in flist(c1), the screen is scanned for commands from
+top to bottom.  Slash commands are queued and not immediately acted upon.
+Regular commands are substituted (if necessary), and sent to UNIX to be
+carried out.  When the entire screen has been scanned, any slash commands
+that were found are executed, in order.  For all commands except stubborn
+commands (those prefixed with "&"), a "*" character is written over the
+first letter in the commmand if the command executed successfully, or a
+"^" is written over the first letter if the command returned in error.
+These special characters serve not only to inform you of the outcome of
+each command, they prevent flist from re-executing the command unless the
+starting character is re-typed.
+	
+
+SLASH COMMANDS
+
+Commands starting with "/" are slash commands.  Slash commands are used
+to access flist(c1) sub-commands.  As mentioned above, they are executed
+after all other commands.  The slash commands are listed below:
+
+	SCmd		Function
+	====		========
+		
+	/		make line top line
+	/h		get help for flist
+	/o command	do command in shell
+	/q		quit flist
+	/r		redraw screen
+	/e [options]	enter a sub-directory
+	/f file 	find a file in the list
+
+	/top		go to top of list
+	/bottom		go to bottom of list
+	/#		go to line number #
+
+	/sd		Sort date
+	/sdr		Sort date, reverse
+	/sn		Sort name
+	/snr		Sort name, reverse
+	/st		Sort type
+	/str		Sort type, reverse
+	/ss		Sort size
+	/ssr		Sort size, reverse
+
+	NOTES:
+
+	To help the task of managing many files, it is possible to sort the
+	list of files flist maintains by (1) file name, (2) file type (ext-
+	ension), (3) file size, or (4) file modification date/time.  The
+	reverse sort orders are also available. 
+
+	The /o command is similar to the \\ command in that whatever you
+	type is sent to the shell with no filename substitution by default.
+	Some differences do exist, however; because it is a slash command,
+	it is performed after all \\ commands, and there will be no --more--
+	message presented when it completes.
+
+	The /e command currently invokes another flist process to enter
+	the indicated directory as a new flist level.  The current flist
+	options are automatically passed unless other flist options are
+	given after /e to override.  In a future release, it will perform
+	basically the same function, but will not invoke a new process to
+	do so.  Invoking many flist processes by nesting deep into your
+	subdirectory tree is discouraged until this revision has been made.
+
+
+KEYBOARD
+
+All of the control characters are mappable by the use of a macro expansion
+facility.  There is a script, /usr/local/bin/flistmc, that compiles the
+source macro file into the run-time macro file used by flist.  By running
+the script, the user can setup his own macros to record frequently used
+keystrokes in any of the unused macro positions, A through Z.  The fol-
+lowing control-keys are reserved:
+
+		Rsvd	Function		Free
+		====	========		====
+
+		A	enters command mode	B
+		C	exits program
+		D	down page		E
+		F	delete character	G
+		H	back space
+		I	hack line
+		J	down line
+		K	up line
+		L	right character
+		M	execute screen		N, O, P
+		Q	used by system
+		R	refresh screen
+		S	used by system		T, V
+		U	up page			W
+		X	execute line		Y
+		Z	used by system
+
+
+
+        Before using flist for the first time, the user should type:
+
+		$ flistmc
+
+in order to get a copy of the standard macro file.  Typing:
+
+		$ flistmc edit
+
+allows the modification of the macros, and:
+
+		$ flistmc rm
+
+removes the flist macro files from the user's directory.
+
+
+
+
+FILES
+	${HOME}/.flmac			private binary macro file
+	${HOME}/.flmac.s		private source macro file
+	/usr/local/bin/flmac.data	public (default) macro file
+	/usr/local/bin/flmac.prog	flist macro compiler executable
+	/usr/local/bin/flistmc		flist macro compiler script
+	/usr/local/bin/flist		flist executable
+	/usr/local/bin/flist.man1	this (temporary) help file
+
+
+BUGS
+	
+	(1)	The -b option doesn't work on some terminals, including
+		the Wyse-99.

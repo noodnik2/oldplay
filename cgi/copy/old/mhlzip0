@@ -1,0 +1,59 @@
+#! /bin/sh
+
+web_root="/~marty"
+# file_root="/home/marty/website"
+file_root="$WN_ROOT"
+
+errfile=/tmp/txz$$
+# zipfile="$file_root/tmp/`date +%M%d%H%M%S`.zip"
+zipfile="/tmp/`date +%M%d%H%M%S`.zip"
+title="$1"
+
+songdir=music/midi/songs
+
+outputzip()
+{
+	chmod a+r $zipfile
+	(
+		echo "Content-type: application/x-zip-compressed"
+		echo ""
+		cat $zipfile
+# sleep long enough to let "cat" open the file...
+	) &
+	sleep 2
+# remove file's inode (as long as "cat" is alive, it will remain allocated)
+	rm -f $zipfile > /dev/null 2>&1
+}
+
+mkzip()
+{
+	> $errfile
+	(	
+		if cd $file_root/$songdir > $errfile; then
+			if zip -k -@ $zipfile > $errfile 2>&1; then
+				outputzip
+			else
+				return
+			fi
+		else
+			return
+		fi
+	)
+}
+
+cleanupandleave()
+{
+	rm -r $errfile
+	exit $*
+	# notreached
+}
+
+if mkzip; then
+	cleanupandleave
+	# notreached
+fi
+
+cat $errfile 1>& 2
+cleanupandleave 1
+
+# end of mhlzip

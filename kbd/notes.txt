@@ -1,0 +1,23 @@
+
+logic:
+
+	1.	gather keys in buffer until no key pressed for 1/4 sec.
+	2.	search entire keymap table, produce "longest match".
+	3.	if no "longest match" found, dump one key, put back
+		the rest.
+
+
+	while(!inbuff_full()) {
+		if (!inputready_within_250msec()) break ;
+		read_to_inbuff() ;
+	}
+	match_index= find_longest_match() ;
+	if (match_index>= 0) {
+		eat_keychars(keymap[match_index].length) ;
+		dump_keycode(keymap[match_index].code) ;
+	}
+	else {
+		dump_one_keychar() ;
+	}	
+
+end of notes

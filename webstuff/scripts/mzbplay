@@ -1,0 +1,31 @@
+#! /bin/sh
+
+temproot=/usr/local/tmp
+tempdir=${temproot}/mzb$$
+logfile=${temproot}/mzb$$.log
+progname=`basename $0`
+
+errmsg()
+{
+	echo "${progname}: $*" 1>&2
+}
+
+case $# in
+1)	;;
+*)	errmsg "Invalid argument(s)"
+	exit 1
+	;;
+esac
+
+archive=$1
+
+if unzip -L $archive -d $tempdir > $logfile; then
+	play $tempdir/*
+	rm -r -f $tempdir $logfile
+else
+	unzip_RC=$?
+	errmsg "R(${unzip_RC}); unzip"
+	exit 2
+fi
+
+exit 0

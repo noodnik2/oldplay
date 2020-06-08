@@ -1,0 +1,42 @@
+#! /bin/sh
+
+#
+#	This script checks if $user is around somewhere...
+#
+
+user=$1
+
+# trap "exit 1" 1 2 3 6 10 11 12 13 14 15 17 18 19 20 21 22
+
+#
+#	check if user is on mtalk...
+#
+
+x=`ps afx | grep mtalk | grep -v "grep mtalk"`
+set -- $x
+mtalk_pid="$1"
+
+case "$mtalk_pid" in
+"")	;;
+*)	rm -f /tmp/mtalk.stat
+	kill -USR1 $mtalk_pid
+	if sleep 1; then
+		if grep -i "$user" /tmp/mtalk.stat > /dev/null ; then
+			echo "in chat mode"
+			exit 0
+		fi
+	fi
+	;;
+esac
+
+#
+#	check if user is a host that is on the net...
+#
+
+if ping -r -q -c 1 $user 2>&1 | grep " 100% packet loss" > /dev/null; then
+	exit 1
+fi
+
+echo "at work"
+exit 0
+

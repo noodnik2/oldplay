@@ -1,0 +1,19 @@
+
+trapit()
+{
+	echo "you made a signal"
+}
+
+trap "trapit" 1 2 15 
+
+while true; do
+	echo "shell $PS1\c"
+	read cmd
+	set - $cmd
+	case $1 in
+		cd)	echo "can't do cd"
+			continue
+			;;
+	esac
+	eval $*
+done

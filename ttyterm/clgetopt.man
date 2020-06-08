@@ -1,0 +1,229 @@
+	CLGETOPT(3)		C LIBRARY FUNCTIONS		CLGETOPT(3)
+
+	NAME
+		clgetopt - parse option from (argc,argv) 
+
+	SYNOPSIS
+		#include	"clgetopt.h"
+
+		extern int cloparg ;		    /* return of <cmdarg> */
+		extern int cloptind ;		    /* location in argv[] */ 
+		extern int clopterr ;		    /* ok to print errmsg */
+
+		void clinit(argv);		    /* call first, once  */
+		char *argv[];
+
+		int clgetopt(argc, argv, optionlist);	/* parse option   */
+		int argc;
+		char *argv[], *optionlist;
+
+		char *clrmcma(s);			/* remove commas  */
+		char *s;
+
+		int cl1arg(s);				/* is single arg? */
+		char *s;
+
+		int cl1fn(s, dvok);			/* is filename?   */
+		char *s;
+		int dvok;
+
+		int clerror(msg);			/* present error  */
+		char *msg;
+
+
+	DESCRIPTION
+		Useful in the 'main' module of each program for UNIX is a
+		standard mechanism for obtaining options from the command
+		line.  With this approach, commands will share a standard
+		command format and be more predictable and easier to use.
+
+		The user first calls clinit to initialize the parser,
+		passing it the argv variable that contains the full path
+		and file name of the program being executed in argv[0].
+
+		Then, by calling clgetopt multiple times, each option is
+		stripped from the start of the command line.  The option
+		letter is returned.  For options that require arguments,
+		the location of the argument string is left in the global
+		character pointer cloptarg.  When clgetopt returns -1,
+		cloptind points to the first non-option token in argv[].
+		Other routines available in the clgetopt module can be
+		used to check the contents of argument or option values,
+		and to present error messages on stderr prefixed with the
+		name of the program, a colon, and a space.
+
+
+	FUNCTIONS
+
+	clgetopt(argc, argv, optionlist)
+
+		optionlist records the tolerated options.  A colon after
+		an option letter indicates that the option takes an arg-
+		ument.  e.g.  "abo:" or "ao:b" or "o:ba" are all equiv-
+		alent.  a and b are options, and o is an option requiring
+		an option argument.  
+
+		Example using clgetopt():	
+
+	|	#include	"clgetopt.h"
+	|
+	|	main(argc, argv)
+	|	int argc;
+	|	char *argv[];
+	|	{
+	|		int i, c;
+	|
+	|		while( (c= clgetopt(argc, argv, "abo:")) != -1) {
+	|			switch(c) {
+	|				case 'a':   aflag= 1;   break;
+	|				case 'b':   bflag= 1;   break;
+	|				case 'o':   strcpy(ofile, cloptarg);
+	|							break;
+	|				default:    exit(1);	break;
+	|			}
+	|		}
+	|
+	|		for (i= cloptind; i< argc; i++) {
+	|			process(argv[i]);
+	|		}
+	|	}
+
+		Error messages presented by clgetopt() if clopterr!=0:
+
+			command:  option x not allowed.
+	
+			or
+		
+			command:  "xxx" syntax invalid.
+
+	
+		Warnings:
+			clgetopt() does not check for repeated options.
+			The last specified will be used.
+
+	clrmcma(s)
+
+		Examines s.  If it contains any white space characters
+		(' ', '\t', '\n'), leaves s unmodified.
+		Otherwise, converts all commas in s to ' '.
+		In all cases, returns s.
+	
+
+	cl1arg(s)
+
+		cl1arg verifies that s contains a single <optarg>.
+		It is not necessary, but you may use clrcma(s) before
+		calling cl1arg(s).
+		if clopterr!=0, cl1arg issues the error message
+
+		command:  "xxx" invalid.
+	
+		if none or more than one argument is found.
+
+		Returns 0 if 1 argument found, 1 if none or more than one
+		argument found.
+
+
+	cl1fn(s)
+
+		cl1fn verifies that s contains a single <optarg> which can
+		be interpreted as a filename or, if dvok!=0, as a device
+		name (just tolerates /dev/...), otherwise "/dev/..." not okay.
+		If clopterr!=0, issues the error message
+	
+		command:  "xxx" found where filename expected
+	
+		or 
+
+		command:  "xxx" found where device or filename expected
+
+		Returns 0 if 1 argument found, 1 if none or more than
+		one argument found.
+	
+
+	clerror(msg)
+
+		clerror presents the message "msg", prefixed by the
+		command name, on the standard error device. 
+
+
+	DIAGNOSTICS
+		clerror(msg) always prints the message it is passed.
+		The other cl-- routines suppress their error message
+		if the global clopterr has been set to 0 by the user.
+
+
+	USAGE NOTES
+		These routines are provided to help create new commands
+		with a common and flexible option syntax.  The following
+		section serves as a guide to writing commands with these
+		functions:
+		
+	Syntax:	     <name> [-<option>...] [<cmdarg>]
+
+	where
+		<name>		the name of the executable file
+			
+		<option>	(Always preceded by a -) is
+				either <noargletter...> or
+				<argletter> <optarg>[,...]
+	
+		<noargletter>	A single letter representing an option
+				without an option argument.  Note that
+				more than one <noargletter> can be grouped
+				after one "-".
+
+		<argletter>	A single letter representing an option
+				requiring an option argument.
+
+		<optarg>	An option argument (character string)
+				satisfying a preceding <argletter>.  Note
+				that groups of <optarg>s following an
+				<argletter> must be separated by commas
+				or separated by white space and quoted.
+
+		<cmdarg>	Path name (or other command argument) not
+				beginning with "-". or "-" by itself ind-
+				icating standard input.
+	
+	Rules:
+
+		1.   Command names (<name>) must be between two and nine
+		     characters long.
+
+		2.   Command names must include only lowercase letters and
+		     digits.
+
+		3.   Option names (<option>) must be one character long.
+
+		4.   All options must be preceded by "-".
+
+		5.   Options with no arguments may be grouped after a
+		     single "-".
+
+		6.   The first option-argument (<optarg>) following an
+		     option must be preceded by white space.
+
+		7.   Option-arguments cannot be optional.
+
+		8.   Groups of option arguments following an option must
+		     either be separated by commas or separated by white
+		     space and quoted, e.g., -o xxx,z,yy or -o "xxx y z".
+
+		9.   All optiona must precede operands <cmdarg>.
+
+		10.  "--" may be used to indicated the end of the options.
+
+		11.  The order of the options relative to one another
+		     should not matter.
+		 
+		12.  The relative order of the operatnds (<cmdarg>) may
+		     affect their significance in ways determined by the
+		     command in which they appear.
+
+		13.  "-" preceded and followed by white space should only
+		     be used to mean standard input.
+
+		14.  All commands will return a non-zero exit status for
+		     abnormal termination.
+

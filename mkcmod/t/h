@@ -1,0 +1,38 @@
+/*	Revision:      		1
+*/
+
+/*
+
+	_@l_.h				_@u_ C Header
+					Copyright (C) 1996, Point Of Sale Ltd.
+
+*/
+
+#ifndef	_@u__H_INC
+#define	_@u__H_INC
+
+/*
+	sub-#includes
+*/
+
+/*
+	#defines
+*/
+#define	_@u_E_SUCCESS	0
+
+/*
+	typedefs
+*/
+typedef int _@u_E ;
+
+/*
+	function decls
+*/
+_@u_E _@l__errno(void) ;
+int _@l__init(void) ;
+int _@l__fini(void) ;
+
+/* #ifndef _@u__H_INC */
+#endif
+
+/* end of _@l_.h */

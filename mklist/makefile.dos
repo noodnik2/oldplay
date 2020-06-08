@@ -1,0 +1,50 @@
+#	Revision:		8
+#
+
+#
+#
+#
+
+MKLIST=mklist.exe
+MKLIST_OBJ=mklist.obj db.obj pe.obj 	\
+	txtexp.obj abts.obj 		\
+	subexpr.obj evaluate.obj
+
+LINKCMD=link
+LOPTS=/stack:10240
+COPTS=/W3
+
+PRODUCTS=$(MKLIST)
+
+all:	$(PRODUCTS)
+
+.c.obj:
+	$(CC) /c $(COPTS) $*.c
+
+$(MKLIST):	$(MKLIST_OBJ)
+	$(LINKCMD) $(LOPTS) @<<
+$(MKLIST_OBJ)
+$(MKLIST)
+;
+<<NOKEEP
+
+clean:
+	for %x in ($(PRODUCTS) *.obj) do del %%x
+
+mklist.obj:	mklist.h db.h pe.h
+
+db.obj:		db.h
+
+pe.obj:		pe.h txtexp.h abts.h subexpr.h evaluate.h
+
+subexpr.obj:	subexpr.h
+
+evaluate.obj:	evaluate.h subexpr.h
+
+ats.obj:	ats.h
+
+abts.obj:	abts.h ats.h
+
+txtexp.obj:	txtexp.h
+
+# end of makefile

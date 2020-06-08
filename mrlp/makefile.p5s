@@ -1,0 +1,52 @@
+
+#
+#	Makefile for MRLP using MS-DOS Microsoft C 5.10
+#	Copyright (C) 1992, Contahal Ltd.
+#
+
+NETDIR=D:\3OPEN
+INSTDIR=D:\MARTY\BIN
+CDIR=D:\MARTY\MSC5
+
+INCLUDE=$(INCLUDE);$(NETDIR)\include
+NETLIBS=$(NETDIR)\DOS_SOCK.LIB
+LIB=$(CDIR)\lib\slibce.lib+$(NETLIBS)
+CC=$(CDIR)\BIN\CL
+LFLAGS=/stack:10240
+
+MRLP=mrlp.exe
+
+MRLP_OBJ=mrlp.obj mrlpsub.obj clgetopt.obj
+
+PRODUCTS=$(MRLP)
+INSTALLS=install.$(MRLP)
+
+all:	$(PRODUCTS)
+
+install: $(MRLP)
+	copy $(INSTDIR)\$(MRLP) $(INSTDIR)\$(MRLP:.exe=.bak)
+	copy $(MRLP) $(INSTDIR)\$(MRLP)
+
+$(MRLP):	$(MRLP_OBJ)
+	link $(LFLAGS) @<<
++
+$(MRLP_OBJ)
+$(MRLP)
+
+$(LIB) ;
+<<NOKEEP
+
+clean:
+	for %%X in ($(PRODUCTS)) do erase %%X
+	for %%X in ($(MRLP_OBJ)) do erase %%X
+
+clgetopt.obj:	compiler.h clgetopt.h
+
+mrlpd.obj:	compiler.h mrlpsub.h substr.h clgetopt.h
+
+mrlp.obj:	compiler.h mrlpsub.h clgetopt.h
+
+mrlpsub.obj:	compiler.h mrlpsub.h clgetopt.h
+
+substr.obj:	compiler.h substr.h
+
