@@ -33,8 +33,7 @@
 	Definitions in use for this product:
 */
 #define		OPSYS		OPUNIX
-//#define		OPSLVL		OPLUXV
-#define		OPSLVL		OPLBSD42
+#define		OPSLVL		OPLUXV
 #define		COMPILER	CCUX
 
 

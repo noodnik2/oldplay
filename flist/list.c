@@ -36,6 +36,11 @@
 extern struct fl_arg fla ;
 extern struct fl_opt flo ;
 
+static int toomany();
+static int notadir();
+static struct fl_line *i_xpandir();
+static int xpand();
+
 struct fl_line *i_xpandir();
 
 extern char *malloc() ;

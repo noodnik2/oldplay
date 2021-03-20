@@ -49,6 +49,8 @@ static char saved_token[SIZE_IN+1] ;
 static char saved_used= 0 ;
 static long inputline= 0L ;
 
+static int gc();
+
 void ungettok(s)
 char *s;
 {

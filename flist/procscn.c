@@ -18,7 +18,8 @@ extern struct fl_scn fls ;
 
 struct fl_line *fl_lofs() ;
 
-char *strim() ;
+static char *strim() ;
+static int find_str();
 
 int (*s_name()), (*s_size()), (*s_date()), (*s_ext()) ;
 

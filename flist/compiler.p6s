@@ -40,6 +40,7 @@
 #define		OPLUXV		101		/* AT&T UnixV */
 #define		OPLBSD42	102		/* Berkeley 4.2 */
 #define		OPLXENIX	103		/* Xenix */
+#define		OPLLINUX	104		/* Linux */
 
 /*
 	OPSYS==MSDOS Operating system levels:
@@ -77,11 +78,11 @@
 /*
 	Definitions in use for this product:
 */
-#define		COMPILER	CCMS6
-#define		OPSYS		OPMSDOS
-#define		OPSLVL		OPLDOS21
+#define		COMPILER	CCUXV
+#define		OPSYS		OPUNIX
+#define		OPSLVL		OPLLINUX
 #define		MACHINE		IBMPC
-#define		BYTEORDER	LOHI
+#define		BYTEORDER	HILO
 
 #ifndef	NULL
 #define	NULL	0

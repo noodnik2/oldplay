@@ -52,7 +52,11 @@
 static struct rdstrdta rdd= { 0 } ;
 
 static int rd(), rdi() ;
+static int rdf();
 static unsigned short rdpos() ;
+static int rdseek();
+static int rdstbl();
+static int i_rddstri();
 
 extern long lseek() ;
 extern void bswap() ;

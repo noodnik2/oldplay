@@ -5,6 +5,7 @@
 #define		MAXSIZE		(CMDSIZE)
 
 char *memchr() ;
+static int procesc();
 
 int cescstr(cl, il, ml)
 char *cl;

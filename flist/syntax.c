@@ -19,7 +19,7 @@ static char _hfile[]= "flist.man1" ;
 static char _hfile[]= "flist.man" ;
 #endif
 
-void lcl_syntax() ;
+static void lcl_syntax() ;
 
 extern char *getenv() ;
 

@@ -26,6 +26,11 @@
 #define	DIRENTRY_T	struct direct
 #endif
 
+#if	COMPILER==CCUXV
+#include	<dirent.h>
+#define	DIRENTRY_T	struct dirent
+#endif
+
 #if	COMPILER==NCRNST
 #include	<dirent.h>
 #define	DIRENTRY_T	struct dirent

@@ -36,7 +36,8 @@ extern struct fl_arg fla ;
 
 extern void bswap() ;
 
-static char *fname(), *fnext() ;
+char *fnext() ;
+static char *fname();
 static int insert(base, arg);
 
 #define		SIZE_OUT	CMDSIZE	/* max. size of processed token */

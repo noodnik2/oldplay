@@ -14,6 +14,8 @@
 
 extern struct fl_arg fla ;
 
+static int adv_q();
+
 int queueslc(cmd, ecmd, flp, j)
 char *cmd, *ecmd;
 struct fl_line *flp;

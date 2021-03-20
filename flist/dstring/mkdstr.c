@@ -71,8 +71,11 @@
 struct mkdopt mkdo ;
 struct mkddta mkdd ;
 
-void idata() ;
-void wr(), wri() ;
+static void idata() ;
+static void wr(), wri() ;
+static int wrdstrs();
+static int getstr();
+static int rddstrs();
 
 extern void bswap() ;
 

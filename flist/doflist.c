@@ -15,6 +15,9 @@
 extern struct fl_arg fla ;
 extern struct fl_scn fls ;
 
+static void wrapup() ;
+static int process();
+void absmove();
 void useline(), saveline(), wrapup() ;
 char *fl_gcmd() ;
 
