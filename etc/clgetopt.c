@@ -17,6 +17,9 @@
 #include	"compiler.h"
 #include	"clgetopt.h"
 
+#include	<unistd.h>
+#include	<stdlib.h>
+
 extern int optind ;
 
 void clinit(argv)

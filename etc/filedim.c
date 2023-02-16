@@ -7,6 +7,9 @@
 
 #include	<stdio.h>
 #include	<fcntl.h>
+#include	<memory.h>
+#include	<stdlib.h>
+#include	<unistd.h>
 
 #include	"compiler.h"
 #include	"clgetopt.h"
@@ -34,7 +37,12 @@ static void report() ;
 static void emsg() ;
 static void printfiledim() ;
 
-void main(argc, argv)
+// int exit();
+void clinit();
+int clgetopt(int, char**, char*);
+void clerror(char*);
+
+int main(argc, argv)
 int argc ;
 char *argv[] ;
 {
